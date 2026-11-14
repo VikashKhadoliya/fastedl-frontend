@@ -1,0 +1,450 @@
+"use client";
+
+import { useState } from "react";
+import OxygenIcon from "./OxygenIcon";
+import { buildDownloadProxyUrl } from "@/lib/api";
+import { useTranslation } from "../context/I18nContext";
+
+export default function MediaPreview({ data, onReset }) {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [showFullCaption, setShowFullCaption] = useState(false);
+  const [downloadingIndex, setDownloadingIndex] = useState(null);
+  const [selectedQualityBySlide, setSelectedQualityBySlide] = useState({});
+  const { t } = useTranslation();
+
+  if (!data || !data.items || data.items.length === 0) {
+    return null;
+  }
+
+  const isCarousel = data.type === "carousel" && data.items.length > 1;
+  const isViewer = data.type === "viewer";
+  const currentItem = isCarousel ? data.items[activeSlide] : data.items[0];
+
+  // Video qualities resolution logic
+  const isVideo = currentItem.type === "video";
+  const availableQualities = isVideo && currentItem.qualities && currentItem.qualities.length > 0
+    ? currentItem.qualities
+    : null;
+
+  const currentQuality = availableQualities
+    ? availableQualities.find((q) => q.id === selectedQualityBySlide[activeSlide]) || availableQualities[0]
+    : null;
+
+  const handleDownload = (item, idx) => {
+    setDownloadingIndex(idx);
+
+    const downloadUrl = (isVideo && currentQuality && currentQuality.download_url)
+      ? currentQuality.download_url
+      : item.download_url;
+
+    const audioUrl = (isVideo && currentQuality && currentQuality.audio_url)
+      ? currentQuality.audio_url
+      : null;
+
+    const qualityLabel = isVideo && currentQuality ? currentQuality.label : null;
+    const formatId = isVideo && currentQuality ? (currentQuality.format_id || currentQuality.id) : null;
+
+    let targetFilename = item.filename || "fastedl_download";
+    if (isVideo && currentQuality && currentQuality.id && targetFilename) {
+      const extIdx = targetFilename.lastIndexOf(".");
+      if (extIdx !== -1) {
+        targetFilename = `${targetFilename.slice(0, extIdx)}_${currentQuality.id}${targetFilename.slice(extIdx)}`;
+      } else {
+        targetFilename = `${targetFilename}_${currentQuality.id}.mp4`;
+      }
+    }
+
+    const proxyUrl = buildDownloadProxyUrl(downloadUrl, targetFilename, audioUrl, qualityLabel, formatId);
+
+    const link = document.createElement("a");
+    link.href = proxyUrl;
+    link.download = targetFilename;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => {
+      setDownloadingIndex(null);
+    }, 1500);
+  };
+
+  const handleDownloadAll = async () => {
+    if (!data.items) return;
+    setDownloadingIndex("all");
+    for (let i = 0; i < data.items.length; i++) {
+      const itm = data.items[i];
+      const isItmVid = itm.type === "video";
+      const itmQualities = isItmVid && itm.qualities && itm.qualities.length > 0 ? itm.qualities : null;
+      const q = itmQualities
+        ? (itmQualities.find((x) => x.id === selectedQualityBySlide[i]) || itmQualities[0])
+        : null;
+
+      const dlUrl = (isItmVid && q && q.download_url) ? q.download_url : itm.download_url;
+      const aUrl = (isItmVid && q && q.audio_url) ? q.audio_url : null;
+      const qLbl = isItmVid && q ? q.label : null;
+      const fId = isItmVid && q ? (q.format_id || q.id) : null;
+
+      let targetFn = itm.filename || `fastedl_slide_${i + 1}`;
+      if (isItmVid && q && q.id && targetFn) {
+        const extIdx = targetFn.lastIndexOf(".");
+        if (extIdx !== -1) {
+          targetFn = `${targetFn.slice(0, extIdx)}_${q.id}${targetFn.slice(extIdx)}`;
+        }
+      }
+
+      const proxyUrl = buildDownloadProxyUrl(dlUrl, targetFn, aUrl, qLbl, fId);
+      const link = document.createElement("a");
+      link.href = proxyUrl;
+      link.download = targetFn;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      await new Promise((r) => setTimeout(r, 600));
+    }
+    setDownloadingIndex(null);
+  };
+
+  return (
+    <div className="w-full bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] dark:border-[#334155] shadow-xl overflow-hidden mt-6 transition-all text-left">
+      {/* Top Banner / Metadata */}
+      <div className="px-5 py-3.5 bg-[#F8FAFC] dark:bg-[#0F172A] border-b border-[#E2E8F0] dark:border-[#334155] flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          {data.owner_avatar ? (
+            <img
+              src={data.owner_avatar}
+              alt={data.owner || "Creator"}
+              className="w-9 h-9 rounded-full border border-[#E2E8F0] dark:border-[#334155] object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-[#635BFF]/10 text-[#635BFF] flex items-center justify-center font-bold text-xs">
+              <OxygenIcon name="viewer" size={16} alt="User" />
+            </div>
+          )}
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-sm text-[#0F172A] dark:text-[#F8FAFC]">
+                {data.owner ? `@${data.owner}` : "Instagram Creator"}
+              </span>
+              <OxygenIcon name="check" size={13} alt="Verified" />
+            </div>
+            <div className="flex items-center gap-3 text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
+              {data.timestamp && (
+                <span>{new Date(data.timestamp).toLocaleDateString()}</span>
+              )}
+              {data.likes !== null && data.likes !== undefined && (
+                <span>&bull; {data.likes.toLocaleString()} likes</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={onReset}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] transition-colors cursor-pointer"
+        >
+          <OxygenIcon name="refresh" size={13} alt="Reset" />
+          <span>{t("preview.tryAnotherLink", "Try Another Link")}</span>
+        </button>
+      </div>
+
+      {/* Main Body: Preview & Download Actions */}
+      <div className="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Media Player / Image Viewer */}
+        <div className="lg:col-span-7 flex flex-col items-center">
+          <div className="relative w-full max-w-sm aspect-square bg-[#0F172A] rounded-xl overflow-hidden flex items-center justify-center shadow-inner">
+            {currentItem.type === "video" ? (
+              <video
+                key={currentQuality?.download_url || currentItem.download_url}
+                controls
+                playsInline
+                poster={currentItem.thumbnail_url}
+                className="w-full h-full object-contain"
+              >
+                <source src={currentQuality?.download_url || currentItem.download_url} type="video/mp4" />
+                Your browser does not support HTML5 video preview.
+              </video>
+            ) : (
+              <img
+                key={currentItem.download_url}
+                src={currentItem.thumbnail_url || currentItem.download_url}
+                alt="Media preview"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-contain"
+              />
+            )}
+
+            {/* Carousel navigation overlay */}
+            {isCarousel && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveSlide((prev) => (prev > 0 ? prev - 1 : data.items.length - 1))}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white shadow transition-transform active:scale-95 cursor-pointer flex items-center justify-center"
+                  aria-label="Previous slide"
+                >
+                  <OxygenIcon name="arrow-left" size={14} alt="Prev" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSlide((prev) => (prev < data.items.length - 1 ? prev + 1 : 0))}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white shadow transition-transform active:scale-95 cursor-pointer flex items-center justify-center"
+                  aria-label="Next slide"
+                >
+                  <OxygenIcon name="arrow-right" size={14} alt="Next" />
+                </button>
+                <div className="absolute bottom-2.5 px-2.5 py-0.5 rounded-full bg-black/70 text-white text-[11px] font-medium">
+                  {activeSlide + 1} / {data.items.length}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Carousel thumbnails */}
+          {isCarousel && (
+            <div className="flex items-center gap-2 mt-3 max-w-sm overflow-x-auto py-1 px-1">
+              {data.items.map((item, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveSlide(idx)}
+                  className={`relative flex-shrink-0 w-11 h-11 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    activeSlide === idx
+                      ? "border-[#635BFF] ring-2 ring-[#635BFF]/30 scale-105"
+                      : "border-[#E2E8F0] dark:border-[#334155] opacity-60 hover:opacity-100"
+                  }`}
+                >
+                  <img
+                    src={item.thumbnail_url || item.download_url}
+                    alt={`Slide ${idx + 1}`}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                  {item.type === "video" && (
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <OxygenIcon name="video" size={12} alt="Video" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Profile Viewer Stats & Recent Posts */}
+          {isViewer && (
+            <div className="w-full max-w-sm mt-4 border-t border-[#E2E8F0] dark:border-[#334155] pt-4">
+              <div className="grid grid-cols-3 gap-2 text-center mb-3">
+                <div className="p-2 rounded-lg bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155]">
+                  <div className="text-xs font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+                    {data.followers ? Number(data.followers).toLocaleString() : "—"}
+                  </div>
+                  <div className="text-[10px] text-[#64748B] dark:text-[#94A3B8]">Followers</div>
+                </div>
+                <div className="p-2 rounded-lg bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155]">
+                  <div className="text-xs font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+                    {data.following ? Number(data.following).toLocaleString() : "—"}
+                  </div>
+                  <div className="text-[10px] text-[#64748B] dark:text-[#94A3B8]">Following</div>
+                </div>
+                <div className="p-2 rounded-lg bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155]">
+                  <div className="text-xs font-bold text-[#0F172A] dark:text-[#F8FAFC]">
+                    {data.media_count ? Number(data.media_count).toLocaleString() : "—"}
+                  </div>
+                  <div className="text-[10px] text-[#64748B] dark:text-[#94A3B8]">Posts</div>
+                </div>
+              </div>
+
+              {data.recent_posts && data.recent_posts.length > 0 && (
+                <div>
+                  <h4 className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] mb-2 flex items-center gap-1.5">
+                    <OxygenIcon name="carousel" size={13} alt="Posts" />
+                    <span>Recent Posts</span>
+                  </h4>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {data.recent_posts.map((post, pIdx) => (
+                      <div key={pIdx} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
+                        <img
+                          src={post.thumbnail_url}
+                          alt="Post thumbnail"
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Download Buttons & Details */}
+        <div className="lg:col-span-5 flex flex-col justify-between">
+          <div className="space-y-3.5">
+            {/* Caption / Bio Section */}
+            {data.full_caption && (
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-xs text-[#0F172A] dark:text-[#F8FAFC]">
+                <p className="font-semibold text-[10px] uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] mb-1">
+                  {isViewer ? "Bio" : "Caption"}
+                </p>
+                <p className="whitespace-pre-line leading-relaxed text-xs">
+                  {showFullCaption
+                    ? data.full_caption
+                    : data.caption || data.full_caption.slice(0, 140)}
+                </p>
+                {data.full_caption.length > 140 && (
+                  <button
+                    onClick={() => setShowFullCaption(!showFullCaption)}
+                    className="text-[11px] font-medium text-[#635BFF] dark:text-[#8B5CF6] hover:underline mt-1 cursor-pointer"
+                  >
+                    {showFullCaption ? "Show less" : "Read more"}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Media Details & Dynamic Quality Selector Panel */}
+            <div className="p-3.5 rounded-xl border border-[#E2E8F0] dark:border-[#334155] bg-[#F8FAFC]/70 dark:bg-[#0F172A]/70 text-xs text-[#64748B] dark:text-[#94A3B8] space-y-2.5">
+              {/* Media Format */}
+              <div className="flex items-center justify-between">
+                <span>Format:</span>
+                <span className="font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
+                  {isVideo ? "MP4 Video" : "JPG Image"}
+                </span>
+              </div>
+
+              {/* Dimensions / Resolutions Display */}
+              <div className="flex items-center justify-between">
+                <span>{isVideo ? "Resolution:" : "Dimensions:"}</span>
+                <span className="font-mono text-xs font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
+                  {isVideo
+                    ? (currentQuality?.resolution || currentItem.dimensions_label || currentItem.resolution || "Original")
+                    : (currentItem.dimensions_label || (currentItem.width && currentItem.height ? `${currentItem.width} × ${currentItem.height} px` : "Original HD"))}
+                </span>
+              </div>
+
+              {/* Dynamic Video Quality Selector */}
+              {isVideo && (
+                <div className="pt-2 border-t border-[#E2E8F0] dark:border-[#334155]">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Quality Options:</span>
+                    <span className="text-[11px] font-bold text-[#06B6D4]">
+                      {currentQuality?.label || "Original HD"}
+                    </span>
+                  </div>
+
+                  {availableQualities && availableQualities.length > 1 ? (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {availableQualities.map((q) => {
+                        const isSelected = (currentQuality?.id === q.id);
+                        return (
+                          <button
+                            key={q.id}
+                            type="button"
+                            onClick={() => setSelectedQualityBySlide((prev) => ({ ...prev, [activeSlide]: q.id }))}
+                            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-[#635BFF] text-white border-[#635BFF] shadow-xs shadow-[#635BFF]/30 font-bold"
+                                : "bg-white dark:bg-[#1E293B] text-[#64748B] dark:text-[#94A3B8] border-[#E2E8F0] dark:border-[#334155] hover:border-[#635BFF]/50 hover:text-[#0F172A] dark:hover:text-[#F8FAFC]"
+                            }`}
+                          >
+                            <span className="truncate">{q.label}</span>
+                            <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                              {q.filesize_formatted && (
+                                <span className={`text-[10px] ${isSelected ? "text-white/80" : "text-[#94A3B8] dark:text-[#64748B]"}`}>
+                                  {q.filesize_formatted}
+                                </span>
+                              )}
+                              {isSelected ? (
+                                <OxygenIcon name="check" size={12} className="shrink-0" alt="Selected" />
+                              ) : null}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-xl bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#64748B] dark:text-[#94A3B8]">Quality:</span>
+                        <span className="font-bold text-[#635BFF] dark:text-[#8B5CF6] flex items-center gap-1">
+                          <OxygenIcon name="check" size={12} alt="Verified" />
+                          {currentQuality?.label || currentItem.dimensions_label || "Original HD"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] flex items-center gap-1.5 pt-1 border-t border-[#E2E8F0] dark:border-[#334155]/60">
+                        <OxygenIcon name="check" size={12} className="text-[#06B6D4] shrink-0" alt="Info" />
+                        <span>Only original source quality is available for this video.</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Photo High Resolution Notice */}
+              {!isVideo && (
+                <div className="pt-2 border-t border-[#E2E8F0] dark:border-[#334155] flex items-center justify-between">
+                  <span>Image Quality:</span>
+                  <span className="font-semibold text-[#635BFF] dark:text-[#8B5CF6] flex items-center gap-1">
+                    <OxygenIcon name="check" size={12} alt="Original" />
+                    Original High Resolution
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Download Buttons */}
+          <div className="space-y-2.5 mt-4 pt-4 border-t border-[#E2E8F0] dark:border-[#334155]">
+            {/* Main Download Button */}
+            <button
+              type="button"
+              onClick={() => handleDownload(currentItem, activeSlide)}
+              disabled={downloadingIndex !== null}
+              className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-bold text-sm text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-98 transition-all disabled:opacity-60 cursor-pointer shadow-xs shadow-[#635BFF]/20"
+            >
+              <OxygenIcon name="download" size={16} alt="Download" />
+              <span>
+                {downloadingIndex === activeSlide
+                  ? t("preview.downloading", "Downloading...")
+                  : isVideo
+                  ? `Download Video (${currentQuality?.label || "MP4"})`
+                  : isCarousel
+                  ? `Download Photo (Slide ${activeSlide + 1} of ${data.items.length})`
+                  : currentItem.dimensions_label
+                  ? `Download Photo (${currentItem.dimensions_label})`
+                  : t("preview.downloadPhoto", "Download Photo")}
+              </span>
+            </button>
+
+            {/* If Carousel: Download All button */}
+            {isCarousel && (
+              <button
+                type="button"
+                onClick={handleDownloadAll}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-[#635BFF] dark:text-[#8B5CF6] bg-[#635BFF]/10 dark:bg-[#635BFF]/20 hover:bg-[#635BFF]/20 border border-[#635BFF]/25 transition-colors cursor-pointer"
+              >
+                <OxygenIcon name="carousel" size={16} alt="All Slides" />
+                <span>Download All ({data.items.length} items)</span>
+              </button>
+            )}
+
+            {/* Direct Link */}
+            <a
+              href={(isVideo && currentQuality && currentQuality.download_url) ? currentQuality.download_url : currentItem.download_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] transition-colors"
+            >
+              <OxygenIcon name="arrow-right" size={13} alt="Open" />
+              <span>Open Source URL</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
