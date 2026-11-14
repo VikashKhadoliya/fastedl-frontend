@@ -99,7 +99,16 @@ export default function DownloaderForm({ initialTab = "video" }) {
       const mediaData = await fetchInstagramMedia(url.trim());
       setResult(mediaData);
     } catch (err) {
-      setError(err.message || t("form.errorPrefix", "Unable to load media. Please ensure the link is from a public post."));
+      let msg = err?.message || t("form.errorPrefix", "Unable to load media. Please ensure the link is from a public post.");
+      if (
+        msg.includes("Unexpected token") ||
+        msg.includes("is not valid JSON") ||
+        msg.includes("The page c") ||
+        msg.includes("<!DOCTYPE")
+      ) {
+        msg = "Unable to connect to the media processing server. Please check your network connection and retry.";
+      }
+      setError(msg);
     } finally {
       setLoading(false);
       setLoadingStep("");

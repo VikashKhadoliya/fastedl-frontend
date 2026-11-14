@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
+const DEFAULT_BACKEND = process.env.NODE_ENV === "production"
+  ? "https://fastedl-backend-production.up.railway.app"
+  : "http://127.0.0.1:8000";
+
+const BACKEND_URL = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
 
 async function proxyRequest(request, { params }) {
   const resolvedParams = await params;
@@ -60,7 +64,7 @@ async function proxyRequest(request, { params }) {
   } catch (err) {
     console.error(`[API Proxy Error] Failed to proxy ${method} ${targetUrl}:`, err);
     return NextResponse.json(
-      { detail: `Failed to connect to backend service at ${BACKEND_URL}: ${err.message}` },
+      { detail: `FastEDL media service temporarily unreachable at ${BACKEND_URL}. Please retry.` },
       { status: 502 }
     );
   }
@@ -72,4 +76,3 @@ export const PUT = proxyRequest;
 export const DELETE = proxyRequest;
 export const PATCH = proxyRequest;
 export const OPTIONS = proxyRequest;
-

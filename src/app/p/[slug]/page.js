@@ -5,7 +5,11 @@ import Link from "next/link";
 import OxygenIcon from "@/components/OxygenIcon";
 import FastEDLLogo from "@/components/FastEDLLogo";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
+const DEFAULT_BACKEND = process.env.NODE_ENV === "production"
+  ? "https://fastedl-backend-production.up.railway.app"
+  : "http://127.0.0.1:8000";
+
+const BACKEND_URL = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +19,8 @@ async function getPageData(slug) {
       cache: "no-store"
     });
     if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) return null;
     const data = await res.json();
     if (!data.success || !data.page) return null;
     if (data.page.status !== "published") return null;

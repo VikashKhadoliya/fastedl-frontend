@@ -1,4 +1,8 @@
-const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000";
+const DEFAULT_BACKEND = process.env.NODE_ENV === "production"
+  ? "https://fastedl-backend-production.up.railway.app"
+  : "http://127.0.0.1:8000";
+
+const BACKEND_URL = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
 
 export async function getCmsPage(slug) {
   try {
@@ -6,6 +10,8 @@ export async function getCmsPage(slug) {
       next: { revalidate: 30 }
     });
     if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) return null;
     const data = await res.json();
     if (data.success && data.page && data.page.status === "published") {
       return data.page;
@@ -15,4 +21,3 @@ export async function getCmsPage(slug) {
   }
   return null;
 }
-
