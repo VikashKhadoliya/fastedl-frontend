@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md bg-[#1E293B] rounded-2xl border border-slate-800 p-8 shadow-2xl">
         <div className="text-center mb-8">
           <div className="w-12 h-12 rounded-2xl bg-[#635BFF]/20 text-[#635BFF] flex items-center justify-center mx-auto mb-3 border border-[#635BFF]/30">
-            <OxygenIcon name="security-high" className="w-6 h-6 text-[#635BFF]" />
+            <OxygenIcon name="security-high" size={24} className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-black tracking-tight text-white">FastEDL Admin Portal</h1>
           <p className="text-xs text-slate-400 mt-1">Platform CMS, Creator Tools & Message Center</p>
@@ -64,7 +64,7 @@ export default function AdminLoginPage() {
 
         {error && (
           <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
-            <OxygenIcon name="dialog-warning" className="w-4 h-4 shrink-0 text-red-400" />
+            <OxygenIcon name="dialog-warning" size={16} className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -110,12 +110,12 @@ export default function AdminLoginPage() {
           >
             {loading ? (
               <>
-                <OxygenIcon name="view-refresh" className="w-4 h-4 animate-spin text-white" />
+                <OxygenIcon name="view-refresh" size={16} className="w-4 h-4 animate-spin text-white" />
                 Signing in...
               </>
             ) : (
               <>
-                <OxygenIcon name="dialog-ok-apply" className="w-4 h-4 text-white" />
+                <OxygenIcon name="dialog-ok-apply" size={16} className="w-4 h-4 text-white" />
                 Sign In to Admin
               </>
             )}
