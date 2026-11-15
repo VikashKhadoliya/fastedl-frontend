@@ -42,7 +42,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md border-b border-[#E2E8F0] dark:border-[#334155] transition-colors duration-200">
+    <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md border-b border-[#E2E8F0] dark:border-[#334155] transition-colors duration-200 pt-safe px-safe">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* FastEDL Brand Logo - Single clean responsive component */}
@@ -196,7 +196,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-[#E2E8F0] dark:border-[#334155] bg-white/98 dark:bg-[#0F172A]/98 backdrop-blur-md px-3.5 pt-3 pb-6 shadow-2xl animate-in slide-in-from-top-2 duration-200 max-h-[85vh] overflow-y-auto">
+        <div className="md:hidden border-b border-[#E2E8F0] dark:border-[#334155] bg-white/98 dark:bg-[#0F172A]/98 backdrop-blur-md px-3.5 pt-3 pb-6 pb-safe shadow-2xl animate-in slide-in-from-top-2 duration-200 max-h-[85vh] overflow-y-auto">
           <div className="space-y-4 mb-5">
             {/* Download Tools */}
             <div>

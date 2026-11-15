@@ -141,7 +141,7 @@ Save this for your next reminder. 📌`;
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Paste or type your caption here. Use empty lines where you want clean breaks..."
-              className="w-full flex-1 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#635BFF] text-sm leading-relaxed resize-none"
+              className="w-full flex-1 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#635BFF] text-base sm:text-sm leading-relaxed resize-none"
             />
 
             {/* Style Selector Chips */}

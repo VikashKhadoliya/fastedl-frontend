@@ -345,7 +345,7 @@ export default function ContentArticleReader({
                                 key={cIdx}
                                 className="group flex items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-200/80 dark:border-slate-800 hover:border-primary/50 transition-all"
                               >
-                                <span className="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 select-all leading-relaxed">
+                                <span className="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 select-all leading-relaxed break-words min-w-0 flex-1">
                                   {captionText}
                                 </span>
 
@@ -482,7 +482,7 @@ export default function ContentArticleReader({
                     value={newsletterEmail}
                     onChange={(e) => setNewsletterEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-base sm:text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <button
                     type="submit"

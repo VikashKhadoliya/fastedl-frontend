@@ -63,9 +63,8 @@ export default function LanguageSelector({ className = "", isMobile = false }) {
       {/* Popover Menu */}
       {isOpen && (
         <div
-          className={`absolute ${
-            isMobile ? "left-0 right-0" : "right-0"
-          } mt-2 w-72 max-w-[85vw] rounded-2xl bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150`}
+          className={`absolute ${isMobile ? "left-0 right-0" : "right-0"
+            } mt-2 w-72 max-w-[85vw] rounded-2xl bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150`}
         >
           {/* Header & Search */}
           <div className="p-2.5 border-b border-[#E2E8F0] dark:border-[#334155] bg-[#F8FAFC] dark:bg-[#0F172A]">
@@ -78,7 +77,7 @@ export default function LanguageSelector({ className = "", isMobile = false }) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search language..."
-                className="w-full pl-8 pr-7 py-1.5 rounded-lg text-xs bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] text-[#0F172A] dark:text-[#F8FAFC] placeholder:text-[#64748B] dark:placeholder:text-[#94A3B8] focus:outline-none focus:border-[#635BFF]"
+                className="w-full pl-8 pr-7 py-1.5 rounded-lg text-base sm:text-xs bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] text-[#0F172A] dark:text-[#F8FAFC] placeholder:text-[#64748B] dark:placeholder:text-[#94A3B8] focus:outline-none focus:border-[#635BFF]"
                 autoFocus
               />
               {search && (
@@ -107,11 +106,10 @@ export default function LanguageSelector({ className = "", isMobile = false }) {
                     key={lang.code}
                     type="button"
                     onClick={() => handleSelect(lang.code)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer text-left ${
-                      isSelected
-                        ? "bg-[#635BFF]/10 text-[#635BFF] dark:bg-[#635BFF]/20 dark:text-[#8B5CF6] font-bold"
-                        : "text-[#0F172A] dark:text-[#F8FAFC] hover:bg-[#F8FAFC] dark:hover:bg-[#0F172A]"
-                    }`}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer text-left ${isSelected
+                      ? "bg-[#635BFF]/10 text-[#635BFF] dark:bg-[#635BFF]/20 dark:text-[#8B5CF6] font-bold"
+                      : "text-[#0F172A] dark:text-[#F8FAFC] hover:bg-[#F8FAFC] dark:hover:bg-[#0F172A]"
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-base">{lang.flag}</span>

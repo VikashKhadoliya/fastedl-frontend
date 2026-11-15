@@ -45,7 +45,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-white dark:bg-[#0F172A] border-t border-[#E2E8F0] dark:border-[#334155] mt-auto text-[#64748B] dark:text-[#94A3B8] transition-colors duration-200">
+    <footer className="bg-white dark:bg-[#0F172A] border-t border-[#E2E8F0] dark:border-[#334155] mt-auto text-[#64748B] dark:text-[#94A3B8] transition-colors duration-200 pb-safe px-safe">
       <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-10 sm:py-16">
         {/* Main Footer Columns */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-6 sm:gap-8 pb-10 border-b border-[#E2E8F0] dark:border-[#334155]">

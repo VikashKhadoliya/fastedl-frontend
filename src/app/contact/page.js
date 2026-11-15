@@ -187,7 +187,7 @@ export default function ContactPage() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="e.g. Alex Morgan"
-                      className="w-full h-10 px-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-xs text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#635BFF] transition-colors"
+                      className="w-full h-10 px-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-base sm:text-xs text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#635BFF] transition-colors"
                     />
                   </div>
 
@@ -201,7 +201,7 @@ export default function ContactPage() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="alex@example.com"
-                      className="w-full h-10 px-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-xs text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#635BFF] transition-colors"
+                      className="w-full h-10 px-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-base sm:text-xs text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#635BFF] transition-colors"
                     />
                   </div>
 
@@ -212,7 +212,7 @@ export default function ContactPage() {
                     <select
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="w-full h-10 px-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-xs text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#635BFF] transition-colors"
+                      className="w-full h-10 px-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-base sm:text-xs text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#635BFF] transition-colors"
                     >
                       <option value="general">General Inquiry</option>
                       <option value="technical">Technical Support / Bug Report</option>
@@ -231,7 +231,7 @@ export default function ContactPage() {
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       placeholder="Please describe your question or issue in detail..."
-                      className="w-full p-3 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-xs text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#635BFF] transition-colors resize-none"
+                      className="w-full p-3 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-base sm:text-xs text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#635BFF] transition-colors resize-none"
                     />
                   </div>
 

@@ -38,7 +38,7 @@ export default function CookieConsent() {
   return (
     <aside
       aria-label="Cookie consent banner"
-      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300"
+      className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300"
     >
       <div className="bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-[#E2E8F0] dark:border-[#334155] shadow-2xl shadow-black/10 text-[#0F172A] dark:text-[#F8FAFC]">
         <div className="flex items-start gap-3">

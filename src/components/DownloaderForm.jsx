@@ -187,7 +187,7 @@ export default function DownloaderForm({ initialTab = "video" }) {
               }}
               placeholder={t("form.placeholder", "Paste your Instagram link here")}
               disabled={loading}
-              className="w-full pl-10 pr-10 sm:pr-36 py-3 sm:py-3.5 text-xs sm:text-sm md:text-base text-[#0F172A] dark:text-[#F8FAFC] bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] rounded-xl sm:rounded-2xl placeholder:text-[#94A3B8] focus:outline-none focus:bg-white dark:focus:bg-[#0F172A] focus:border-[#635BFF] focus:ring-3 focus:ring-[#635BFF]/15 transition-all truncate"
+              className="w-full pl-10 pr-10 sm:pr-36 py-3 sm:py-3.5 text-base sm:text-sm md:text-base text-[#0F172A] dark:text-[#F8FAFC] bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] rounded-xl sm:rounded-2xl placeholder:text-[#94A3B8] focus:outline-none focus:bg-white dark:focus:bg-[#0F172A] focus:border-[#635BFF] focus:ring-3 focus:ring-[#635BFF]/15 transition-all truncate"
             />
 
             {/* Clear Input Button: Always easily accessible when URL is present */}
