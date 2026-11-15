@@ -45,10 +45,9 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md border-b border-[#E2E8F0] dark:border-[#334155] transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
-          {/* FastEDL Brand Logo - Responsive sizing to prevent clipping on small viewports */}
+          {/* FastEDL Brand Logo - Single clean responsive component */}
           <Link href="/" className="flex items-center group shrink-0">
-            <FastEDLLogo size="sm" className="sm:hidden" />
-            <FastEDLLogo size="md" className="hidden sm:inline-flex" />
+            <FastEDLLogo size="md" />
           </Link>
 
           {/* Desktop Navigation Links */}

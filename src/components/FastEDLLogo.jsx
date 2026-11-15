@@ -22,10 +22,10 @@ export default function FastEDLLogo({
 
   const wordmarkSizes = {
     sm: "text-base",
-    md: "text-xl",
-    lg: "text-2xl",
-    xl: "text-3xl sm:text-4xl",
-    "2xl": "text-4xl sm:text-5xl",
+    md: "text-lg sm:text-xl",
+    lg: "text-xl sm:text-2xl",
+    xl: "text-2xl sm:text-4xl",
+    "2xl": "text-3xl sm:text-5xl",
   };
 
   const dotSizes = {

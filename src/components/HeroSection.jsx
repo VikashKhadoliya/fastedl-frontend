@@ -10,10 +10,9 @@ export default function HeroSection({ initialTab = "video" }) {
   return (
     <section className="relative overflow-hidden pt-6 pb-12 sm:pt-14 sm:pb-18 px-3.5 sm:px-6 lg:px-8 text-center bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-[#F8FAFC] transition-colors duration-200">
       <div className="relative max-w-4xl mx-auto flex flex-col items-center z-10">
-        {/* FastEDL Brand Logo - Compact on mobile, prominent on desktop */}
-        <div className="mb-2.5 sm:mb-5 flex items-center justify-center">
-          <FastEDLLogo size="md" className="sm:hidden" />
-          <FastEDLLogo size="xl" className="hidden sm:inline-flex" />
+        {/* FastEDL Brand Logo - Single prominent component */}
+        <div className="mb-3 sm:mb-5 flex items-center justify-center">
+          <FastEDLLogo size="xl" />
         </div>
 
         {/* Main Heading with clamp() fluid scaling */}
