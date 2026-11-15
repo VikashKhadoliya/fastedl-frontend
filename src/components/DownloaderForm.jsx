@@ -143,9 +143,9 @@ export default function DownloaderForm({ initialTab = "video" }) {
 
   return (
     <div id="downloader" className="w-full max-w-3xl mx-auto">
-      {/* Category Tabs: Smooth Horizontally Scrollable on Mobile, Centered on Desktop */}
-      <div className="w-full relative mb-2.5 sm:mb-4 overflow-hidden">
-        <div className="flex items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-1 scrollbar-none no-scrollbar touch-pan-x">
+      {/* Category Tabs: Icon-Only Tool Bar (No text labels, no bouncing animation) */}
+      <div className="w-full relative mb-3 sm:mb-4 overflow-hidden">
+        <div className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-2.5 overflow-x-auto py-1 px-1 scrollbar-none no-scrollbar touch-pan-x">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -153,14 +153,15 @@ export default function DownloaderForm({ initialTab = "video" }) {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-xs active:scale-95 ${
+                title={tab.label}
+                aria-label={tab.label}
+                className={`w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center cursor-pointer shrink-0 shadow-xs transition-colors duration-150 ${
                   isActive
-                    ? "bg-[#635BFF] text-white shadow-md shadow-[#635BFF]/25 font-bold border border-[#635BFF]"
-                    : "bg-white dark:bg-[#1E293B] text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#334155]"
+                    ? "bg-[#635BFF] text-white shadow-md shadow-[#635BFF]/25 border border-[#635BFF]"
+                    : "bg-white dark:bg-[#1E293B] text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#334155] hover:border-[#635BFF]/40"
                 }`}
               >
-                <OxygenIcon name={tab.icon} size={15} alt={tab.label} />
-                <span>{tab.label}</span>
+                <OxygenIcon name={tab.icon} size={18} alt={tab.label} />
               </button>
             );
           })}
