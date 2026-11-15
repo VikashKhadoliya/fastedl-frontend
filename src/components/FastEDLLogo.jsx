@@ -14,7 +14,8 @@ export default function FastEDLLogo({
     sm: 28,
     md: 36,
     lg: 44,
-    xl: 52,
+    xl: 56,
+    "2xl": 68,
   };
 
   const currentDim = pixelDimensions[size] || pixelDimensions.md;
@@ -23,13 +24,30 @@ export default function FastEDLLogo({
     sm: "text-base",
     md: "text-xl",
     lg: "text-2xl",
-    xl: "text-3xl",
+    xl: "text-3xl sm:text-4xl",
+    "2xl": "text-4xl sm:text-5xl",
+  };
+
+  const dotSizes = {
+    sm: "4px",
+    md: "5px",
+    lg: "6px",
+    xl: "7px",
+    "2xl": "9px",
+  };
+
+  const gapSizes = {
+    sm: "gap-2",
+    md: "gap-2.5",
+    lg: "gap-3",
+    xl: "gap-3.5",
+    "2xl": "gap-4",
   };
 
   const isWhite = variant === "white";
 
   return (
-    <div className={`inline-flex items-center gap-2.5 ${className}`}>
+    <div className={`inline-flex items-center ${gapSizes[size] || "gap-2.5"} ${className}`}>
       {/* Modern Geometric Speed Emblem */}
       <FastEDLEmblem size={currentDim} isWhite={isWhite} />
 
@@ -54,8 +72,8 @@ export default function FastEDLLogo({
             <span
               className="inline-block rounded-full ml-1 mb-0.5 align-baseline"
               style={{
-                width: size === "sm" ? "4px" : "5px",
-                height: size === "sm" ? "4px" : "5px",
+                width: dotSizes[size] || "5px",
+                height: dotSizes[size] || "5px",
                 backgroundColor: "#06B6D4",
               }}
             />

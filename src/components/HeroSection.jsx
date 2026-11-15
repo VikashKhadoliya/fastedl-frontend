@@ -9,16 +9,10 @@ export default function HeroSection({ initialTab = "video" }) {
 
   return (
     <section className="relative overflow-hidden pt-12 pb-16 sm:pt-16 sm:pb-20 px-4 sm:px-6 lg:px-8 text-center bg-[#F8FAFC] dark:bg-[#0F172A] text-[#0F172A] dark:text-[#F8FAFC] transition-colors duration-200">
-      {/* Subtle Premium Ambient Lighting (60-30-10 Hierarchy) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[360px] bg-[#635BFF]/8 dark:bg-[#635BFF]/15 blur-3xl rounded-full" />
-        <div className="absolute top-1/3 -right-24 w-80 h-80 bg-[#06B6D4]/5 dark:bg-[#06B6D4]/10 blur-3xl rounded-full" />
-      </div>
-
       <div className="relative max-w-4xl mx-auto flex flex-col items-center z-10">
-        {/* FastEDL Brand Pill */}
-        <div className="mb-5 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] shadow-xs">
-          <FastEDLLogo size="sm" />
+        {/* FastEDL Prominent Brand Logo */}
+        <div className="mb-5 sm:mb-7 flex items-center justify-center">
+          <FastEDLLogo size="xl" />
         </div>
 
         {/* Main Heading */}
