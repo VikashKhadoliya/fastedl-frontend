@@ -6,6 +6,25 @@ import { fetchInstagramMedia } from "@/lib/api";
 import { useTranslation } from "../context/I18nContext";
 import MediaPreview from "./MediaPreview";
 
+export function cleanInstagramUrl(rawInput) {
+  if (!rawInput) return "";
+  let cleaned = rawInput.trim().replace(/^['"<([)]+|['">)\]]+$/g, "");
+  
+  // Extract link if surrounded by share text
+  const match = cleaned.match(/https?:\/\/[^\s]+/i);
+  if (match) {
+    cleaned = match[0].replace(/[.,;!?)]+$/, "");
+  }
+  
+  // Auto-prepend https:// if missing
+  if (!/^https?:\/\//i.test(cleaned)) {
+    if (/^(www\.)?(instagram\.com|instagr\.am|ddinstagram\.com)/i.test(cleaned)) {
+      cleaned = "https://" + cleaned;
+    }
+  }
+  return cleaned;
+}
+
 export default function DownloaderForm({ initialTab = "video" }) {
   const [url, setUrl] = useState("");
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -37,7 +56,8 @@ export default function DownloaderForm({ initialTab = "video" }) {
       if (navigator.clipboard && navigator.clipboard.readText) {
         const text = await navigator.clipboard.readText();
         if (text) {
-          setUrl(text.trim());
+          const cleaned = cleanInstagramUrl(text);
+          setUrl(cleaned || text.trim());
         }
       } else {
         setError(t("form.errorEmpty", "Please enter or paste an Instagram link."));
@@ -54,14 +74,16 @@ export default function DownloaderForm({ initialTab = "video" }) {
   };
 
   const validateInput = (inputUrl) => {
-    if (!inputUrl || !inputUrl.trim()) {
+    const cleaned = cleanInstagramUrl(inputUrl);
+    if (!cleaned) {
       return t("form.errorEmpty", "Please enter or paste an Instagram link.");
     }
 
     try {
-      const parsed = new URL(inputUrl.trim());
+      const parsed = new URL(cleaned);
       const host = parsed.hostname.toLowerCase();
-      if (!host.includes("instagram.com")) {
+      const validHost = host.includes("instagram.com") || host.includes("instagr.am") || host.includes("ddinstagram.com");
+      if (!validHost) {
         return t("form.errorInvalid", "Please provide a valid Instagram link (e.g. instagram.com/reel/...).");
       }
       
@@ -74,7 +96,7 @@ export default function DownloaderForm({ initialTab = "video" }) {
         return t("form.errorInvalid", "Please provide a valid Instagram post, reel, story, or profile link.");
       }
     } catch (e) {
-      return t("form.errorInvalid", "Please enter a valid URL starting with https://");
+      return t("form.errorInvalid", "Please enter a valid Instagram link.");
     }
 
     return null;
@@ -85,18 +107,22 @@ export default function DownloaderForm({ initialTab = "video" }) {
     setError(null);
     setResult(null);
 
-    const validationError = validateInput(url);
+    const cleanedUrl = cleanInstagramUrl(url);
+    const validationError = validateInput(cleanedUrl);
     if (validationError) {
       setError(validationError);
       return;
     }
+
+    // Set normalized URL in input
+    setUrl(cleanedUrl);
 
     setLoading(true);
     setLoadingStep(t("form.connecting", "Fetching media preview..."));
 
     try {
       await new Promise((r) => setTimeout(r, 150));
-      const mediaData = await fetchInstagramMedia(url.trim());
+      const mediaData = await fetchInstagramMedia(cleanedUrl);
       setResult(mediaData);
     } catch (err) {
       let msg = err?.message || t("form.errorPrefix", "Unable to load media. Please ensure the link is from a public post.");

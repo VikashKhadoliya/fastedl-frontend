@@ -1,52 +1,104 @@
 import { NextResponse } from "next/server";
 
-const DEFAULT_BACKEND = process.env.NODE_ENV === "production"
-  ? "https://fastedl-backend-production.up.railway.app"
-  : "http://127.0.0.1:8000";
+const PRODUCTION_BACKEND = "https://fastedl-backend-production.up.railway.app";
+const LOCAL_BACKEND = "http://127.0.0.1:8000";
 
-const BACKEND_URL = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
+// Determine default backend
+const PRIMARY_BACKEND = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || (
+  process.env.NODE_ENV === "production" ? PRODUCTION_BACKEND : LOCAL_BACKEND
+)).replace(/\/+$/, "");
+
+async function fetchWithFallback(targetSubPath, search, method, headers, bodyData) {
+  const isDev = process.env.NODE_ENV !== "production";
+  const urlsToTry = [
+    `${PRIMARY_BACKEND}/api/${targetSubPath}${search}`
+  ];
+
+  // In dev mode, if primary is local and fails, automatically fallback to production backend
+  if (isDev && PRIMARY_BACKEND.includes("127.0.0.1") || PRIMARY_BACKEND.includes("localhost")) {
+    urlsToTry.push(`${PRODUCTION_BACKEND}/api/${targetSubPath}${search}`);
+  }
+
+  let lastError = null;
+
+  for (let i = 0; i < urlsToTry.length; i++) {
+    const currentUrl = urlsToTry[i];
+    try {
+      const fetchOptions = {
+        method,
+        headers,
+        cache: "no-store",
+      };
+
+      if (bodyData !== undefined) {
+        fetchOptions.body = bodyData;
+      }
+
+      // If trying local backend, use a 2.5-second timeout so requests don't hang if local server isn't running
+      const isLocal = currentUrl.includes("127.0.0.1") || currentUrl.includes("localhost");
+      if (isLocal && urlsToTry.length > 1) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        fetchOptions.signal = controller.signal;
+        
+        try {
+          const res = await fetch(currentUrl, fetchOptions);
+          clearTimeout(timeoutId);
+          return res;
+        } catch (localErr) {
+          clearTimeout(timeoutId);
+          // Local server offline or timed out, fall through to production fallback
+          console.warn(`[FastEDL Proxy] Local backend (${currentUrl}) unavailable, falling back to live production backend...`);
+          continue;
+        }
+      }
+
+      return await fetch(currentUrl, fetchOptions);
+    } catch (err) {
+      lastError = err;
+      console.warn(`[FastEDL Proxy] Failed to fetch from ${currentUrl}:`, err.message);
+    }
+  }
+
+  throw lastError || new Error("All backend endpoints failed to respond");
+}
 
 async function proxyRequest(request, { params }) {
   const resolvedParams = await params;
   const pathArray = resolvedParams?.path || [];
   const subPath = Array.isArray(pathArray) ? pathArray.join("/") : pathArray;
-  
   const search = request.nextUrl.search || "";
-  const targetUrl = `${BACKEND_URL}/api/${subPath}${search}`;
+  const method = request.method;
 
+  // Build clean headers, strip host
   const headers = new Headers();
   request.headers.forEach((value, key) => {
-    // Forward standard headers, strip host so FastAPI doesn't see mismatched host
     const lowerKey = key.toLowerCase();
     if (!["host", "connection", "transfer-encoding"].includes(lowerKey)) {
       headers.set(key, value);
     }
   });
 
-  const method = request.method;
-  const fetchOptions = {
-    method,
-    headers,
-    cache: "no-store",
-  };
-
+  // Extract body for non-GET/HEAD methods
+  let bodyData = undefined;
   if (!["GET", "HEAD"].includes(method)) {
     try {
       const contentType = request.headers.get("content-type") || "";
       if (contentType.includes("multipart/form-data")) {
-        fetchOptions.body = await request.formData();
-      } else if (contentType.includes("application/json")) {
-        fetchOptions.body = await request.text();
+        bodyData = await request.formData();
+      } else if (contentType.includes("application/json") || contentType.includes("application/x-www-form-urlencoded") || contentType.includes("text/")) {
+        bodyData = await request.text();
       } else {
-        fetchOptions.body = await request.arrayBuffer();
+        bodyData = await request.arrayBuffer();
       }
     } catch (e) {
-      // Body empty or already consumed
+      // Body empty or unreadable
     }
   }
 
   try {
-    const backendRes = await fetch(targetUrl, fetchOptions);
+    const backendRes = await fetchWithFallback(subPath, search, method, headers, bodyData);
+
     const responseHeaders = new Headers();
     backendRes.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase();
@@ -62,9 +114,9 @@ async function proxyRequest(request, { params }) {
       headers: responseHeaders,
     });
   } catch (err) {
-    console.error(`[API Proxy Error] Failed to proxy ${method} ${targetUrl}:`, err);
+    console.error(`[API Proxy Error] Failed to proxy ${method} /api/${subPath}:`, err);
     return NextResponse.json(
-      { detail: `FastEDL media service temporarily unreachable at ${BACKEND_URL}. Please retry.` },
+      { detail: `FastEDL service temporarily unreachable. Ensure the backend is active.` },
       { status: 502 }
     );
   }

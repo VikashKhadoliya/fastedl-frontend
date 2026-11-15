@@ -7,7 +7,7 @@ import OxygenIcon from "@/components/OxygenIcon";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,41 +18,34 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      let res;
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password })
+      });
+
+      let data;
       try {
-        res = await fetch("/api/admin/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
-      } catch (proxyErr) {
-        // Fallback to direct backend port if Next.js proxy is unavailable
-        res = await fetch("http://localhost:8000/api/admin/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
+        data = await res.json();
+      } catch (parseErr) {
+        data = { detail: `Server responded with status ${res.status}` };
       }
 
-      if (!res.ok && res.status === 404) {
-        // If 404 on proxy, attempt direct backend port 8000
-        res = await fetch("http://localhost:8000/api/admin/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
-      }
-
-      const data = await res.json();
-      if (res.ok && data.token) {
+      if (res.ok && data?.token) {
         localStorage.setItem("fastedl_admin_token", data.token);
-        localStorage.setItem("fastedl_admin_user", JSON.stringify(data.user || { username }));
+        localStorage.setItem("fastedl_admin_user", JSON.stringify(data.user || { username: data.username || username }));
         router.push("/admin");
       } else {
-        setError(data.detail || "Invalid admin username or password.");
+        if (res.status === 401) {
+          setError(data?.detail || "Invalid admin username or password. Default is admin / FastEDL@Admin2026!");
+        } else if (res.status === 502) {
+          setError("FastEDL backend service is unreachable. Ensure the backend server is running.");
+        } else {
+          setError(data?.detail || "Failed to log in to admin portal.");
+        }
       }
     } catch (err) {
-      setError("Network error connecting to admin service. Ensure the FastEDL backend service is running on port 8000.");
+      setError("Network error connecting to admin service. Ensure the FastEDL backend service is running.");
     } finally {
       setLoading(false);
     }
@@ -63,7 +56,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md bg-[#1E293B] rounded-2xl border border-slate-800 p-8 shadow-2xl">
         <div className="text-center mb-8">
           <div className="w-12 h-12 rounded-2xl bg-[#635BFF]/20 text-[#635BFF] flex items-center justify-center mx-auto mb-3 border border-[#635BFF]/30">
-            <OxygenIcon name="security-high" className="w-6 h-6" />
+            <OxygenIcon name="security-high" className="w-6 h-6 text-[#635BFF]" />
           </div>
           <h1 className="text-2xl font-black tracking-tight text-white">FastEDL Admin Portal</h1>
           <p className="text-xs text-slate-400 mt-1">Platform CMS, Creator Tools & Message Center</p>
@@ -71,7 +64,7 @@ export default function AdminLoginPage() {
 
         {error && (
           <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
-            <OxygenIcon name="dialog-warning" className="w-4 h-4 shrink-0" />
+            <OxygenIcon name="dialog-warning" className="w-4 h-4 shrink-0 text-red-400" />
             <span>{error}</span>
           </div>
         )}
@@ -92,9 +85,14 @@ export default function AdminLoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                Password
+              </label>
+              <span className="text-[10px] text-slate-400">
+                Default: FastEDL@Admin2026!
+              </span>
+            </div>
             <input
               type="password"
               required
@@ -108,16 +106,16 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-[#635BFF] hover:bg-[#5248EE] text-white font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3 rounded-xl bg-[#635BFF] hover:bg-[#5248EE] text-white font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <>
-                <OxygenIcon name="view-refresh" className="w-4 h-4 animate-spin" />
+                <OxygenIcon name="view-refresh" className="w-4 h-4 animate-spin text-white" />
                 Signing in...
               </>
             ) : (
               <>
-                <OxygenIcon name="dialog-ok-apply" className="w-4 h-4" />
+                <OxygenIcon name="dialog-ok-apply" className="w-4 h-4 text-white" />
                 Sign In to Admin
               </>
             )}
@@ -125,7 +123,7 @@ export default function AdminLoginPage() {
         </form>
 
         <div className="mt-8 pt-6 border-t border-slate-800 text-center">
-          <Link href="/" className="text-xs text-slate-400 hover:text-primary transition-colors flex items-center justify-center gap-1">
+          <Link href="/" className="text-xs text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-1">
             &larr; Back to Public FastEDL
           </Link>
         </div>
@@ -133,4 +131,3 @@ export default function AdminLoginPage() {
     </div>
   );
 }
-

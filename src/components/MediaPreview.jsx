@@ -10,6 +10,7 @@ export default function MediaPreview({ data, onReset }) {
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [downloadingIndex, setDownloadingIndex] = useState(null);
   const [selectedQualityBySlide, setSelectedQualityBySlide] = useState({});
+  const [downloadError, setDownloadError] = useState(null);
   const { t } = useTranslation();
 
   if (!data || !data.items || data.items.length === 0) {
@@ -30,8 +31,9 @@ export default function MediaPreview({ data, onReset }) {
     ? availableQualities.find((q) => q.id === selectedQualityBySlide[activeSlide]) || availableQualities[0]
     : null;
 
-  const handleDownload = (item, idx) => {
+  const handleDownload = async (item, idx) => {
     setDownloadingIndex(idx);
+    setDownloadError(null);
 
     const downloadUrl = (isVideo && currentQuality && currentQuality.download_url)
       ? currentQuality.download_url
@@ -56,23 +58,47 @@ export default function MediaPreview({ data, onReset }) {
 
     const proxyUrl = buildDownloadProxyUrl(downloadUrl, targetFilename, audioUrl, qualityLabel, formatId);
 
-    const link = document.createElement("a");
-    link.href = proxyUrl;
-    link.download = targetFilename;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const res = await fetch(proxyUrl);
+      if (!res.ok) {
+        let errMessage = "Download failed. Please try again.";
+        try {
+          const errData = await res.json();
+          errMessage = errData.detail || errMessage;
+        } catch (_) {}
+        setDownloadError(errMessage);
+        setDownloadingIndex(null);
+        return;
+      }
 
-    setTimeout(() => {
-      setDownloadingIndex(null);
-    }, 1500);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = targetFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
+    } catch (e) {
+      // Fallback for memory-constrained mobile environments
+      const link = document.createElement("a");
+      link.href = proxyUrl;
+      link.download = targetFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } finally {
+      setTimeout(() => {
+        setDownloadingIndex(null);
+      }, 1200);
+    }
   };
 
   const handleDownloadAll = async () => {
     if (!data.items) return;
     setDownloadingIndex("all");
+    setDownloadError(null);
     for (let i = 0; i < data.items.length; i++) {
       const itm = data.items[i];
       const isItmVid = itm.type === "video";
@@ -95,14 +121,34 @@ export default function MediaPreview({ data, onReset }) {
       }
 
       const proxyUrl = buildDownloadProxyUrl(dlUrl, targetFn, aUrl, qLbl, fId);
-      const link = document.createElement("a");
-      link.href = proxyUrl;
-      link.download = targetFn;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        const res = await fetch(proxyUrl);
+        if (!res.ok) {
+          let errMessage = "Download failed.";
+          try {
+            const errData = await res.json();
+            errMessage = errData.detail || errMessage;
+          } catch (_) {}
+          setDownloadError(errMessage);
+          continue;
+        }
+        const blob = await res.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = targetFn;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
+      } catch (e) {
+        const link = document.createElement("a");
+        link.href = proxyUrl;
+        link.download = targetFn;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
       await new Promise((r) => setTimeout(r, 600));
     }
     setDownloadingIndex(null);
@@ -151,6 +197,22 @@ export default function MediaPreview({ data, onReset }) {
           <span>{t("preview.tryAnotherLink", "Try Another Link")}</span>
         </button>
       </div>
+
+      {/* Error Alert if download failed */}
+      {downloadError && (
+        <div className="mx-5 mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <OxygenIcon name="dialog-warning" size={14} className="text-red-500 shrink-0" />
+            <span>{downloadError}</span>
+          </div>
+          <button
+            onClick={() => setDownloadError(null)}
+            className="text-xs font-bold text-red-500 hover:text-red-700 cursor-pointer"
+          >
+            &times;
+          </button>
+        </div>
+      )}
 
       {/* Main Body: Preview & Download Actions */}
       <div className="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
