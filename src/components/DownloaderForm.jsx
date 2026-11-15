@@ -143,9 +143,9 @@ export default function DownloaderForm({ initialTab = "video" }) {
 
   return (
     <div id="downloader" className="w-full max-w-3xl mx-auto">
-      {/* Category Tabs: Icon-Only Tool Bar (No text labels, no bouncing animation) */}
+      {/* Category Tabs: Clean Icon Navigation (No background boxes, animations, or shadows) */}
       <div className="w-full relative mb-3 sm:mb-4 overflow-hidden">
-        <div className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-2.5 overflow-x-auto py-1 px-1 scrollbar-none no-scrollbar touch-pan-x">
+        <div className="flex items-center justify-center gap-2 xs:gap-3 sm:gap-4 overflow-x-auto py-1.5 px-1 scrollbar-none no-scrollbar touch-pan-x">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -155,13 +155,18 @@ export default function DownloaderForm({ initialTab = "video" }) {
                 onClick={() => setActiveTab(tab.id)}
                 title={tab.label}
                 aria-label={tab.label}
-                className={`w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center cursor-pointer shrink-0 shadow-xs transition-colors duration-150 ${
+                className={`flex flex-col items-center justify-center p-1.5 cursor-pointer shrink-0 bg-transparent border-0 outline-none select-none ${
                   isActive
-                    ? "bg-[#635BFF] text-white shadow-md shadow-[#635BFF]/25 border border-[#635BFF]"
-                    : "bg-white dark:bg-[#1E293B] text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#334155] hover:border-[#635BFF]/40"
+                    ? "opacity-100"
+                    : "opacity-40 hover:opacity-80"
                 }`}
               >
-                <OxygenIcon name={tab.icon} size={18} alt={tab.label} />
+                <OxygenIcon name={tab.icon} size={28} alt={tab.label} />
+                <span
+                  className={`w-3.5 h-0.5 rounded-full mt-1.5 ${
+                    isActive ? "bg-[#635BFF]" : "bg-transparent"
+                  }`}
+                />
               </button>
             );
           })}
