@@ -95,25 +95,25 @@ export default function FeatureShowcase() {
   ];
 
   return (
-    <section id="showcase" className="w-full py-16 sm:py-24 bg-[#F8FAFC] dark:bg-[#0F172A] transition-colors duration-200">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-16">
+    <section id="showcase" className="w-full py-10 sm:py-20 bg-[#F8FAFC] dark:bg-[#0F172A] transition-colors duration-200">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-16">
           <span className="text-xs font-bold uppercase tracking-wider text-[#635BFF] dark:text-[#8B5CF6] mb-2 block">
             Media Format Suite
           </span>
           <h2 className="text-2xl sm:text-4xl font-black text-[#0F172A] dark:text-[#F8FAFC] tracking-tight">
             Comprehensive Instagram Media Tools
           </h2>
-          <p className="mt-2.5 text-sm sm:text-base text-[#64748B] dark:text-[#94A3B8]">
+          <p className="mt-2 text-sm sm:text-base text-[#64748B] dark:text-[#94A3B8]">
             Explore tailored download solutions for every format published on Instagram.
           </p>
         </div>
 
-        <div className="space-y-8 sm:space-y-12">
+        <div className="space-y-6 sm:space-y-12">
           {showcases.map((item) => (
             <div
               key={item.id}
-              className={`bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] dark:border-[#334155] p-6 sm:p-8 shadow-sm hover:shadow-xl hover:border-[#635BFF]/40 transition-all duration-300 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center ${
+              className={`bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] dark:border-[#334155] p-4 sm:p-8 shadow-sm hover:shadow-xl hover:border-[#635BFF]/40 transition-all duration-300 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center ${
                 item.reversed ? "lg:grid-flow-dense" : ""
               }`}
             >

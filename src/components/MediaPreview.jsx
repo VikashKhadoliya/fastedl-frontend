@@ -155,30 +155,30 @@ export default function MediaPreview({ data, onReset }) {
   };
 
   return (
-    <div className="w-full bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] dark:border-[#334155] shadow-xl overflow-hidden mt-6 transition-all text-left">
+    <div className="w-full bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] dark:border-[#334155] shadow-xl overflow-hidden mt-4 sm:mt-6 transition-all text-left">
       {/* Top Banner / Metadata */}
-      <div className="px-5 py-3.5 bg-[#F8FAFC] dark:bg-[#0F172A] border-b border-[#E2E8F0] dark:border-[#334155] flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="px-3.5 sm:px-5 py-2.5 sm:py-3.5 bg-[#F8FAFC] dark:bg-[#0F172A] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           {data.owner_avatar ? (
             <img
               src={data.owner_avatar}
               alt={data.owner || "Creator"}
-              className="w-9 h-9 rounded-full border border-[#E2E8F0] dark:border-[#334155] object-cover"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#E2E8F0] dark:border-[#334155] object-cover shrink-0"
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-[#635BFF]/10 text-[#635BFF] flex items-center justify-center font-bold text-xs">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#635BFF]/10 text-[#635BFF] flex items-center justify-center font-bold text-xs shrink-0">
               <OxygenIcon name="viewer" size={16} alt="User" />
             </div>
           )}
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm text-[#0F172A] dark:text-[#F8FAFC]">
+              <span className="font-bold text-xs sm:text-sm text-[#0F172A] dark:text-[#F8FAFC] truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">
                 {data.owner ? `@${data.owner}` : "Instagram Creator"}
               </span>
-              <OxygenIcon name="check" size={13} alt="Verified" />
+              <OxygenIcon name="check" size={13} className="shrink-0 text-primary" alt="Verified" />
             </div>
-            <div className="flex items-center gap-3 text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
+            <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
               {data.timestamp && (
                 <span>{new Date(data.timestamp).toLocaleDateString()}</span>
               )}
@@ -191,16 +191,17 @@ export default function MediaPreview({ data, onReset }) {
 
         <button
           onClick={onReset}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] transition-colors cursor-pointer shrink-0"
         >
           <OxygenIcon name="refresh" size={13} alt="Reset" />
-          <span>{t("preview.tryAnotherLink", "Try Another Link")}</span>
+          <span className="hidden xs:inline">{t("preview.tryAnotherLink", "Try Another Link")}</span>
+          <span className="xs:hidden">Reset</span>
         </button>
       </div>
 
       {/* Error Alert if download failed */}
       {downloadError && (
-        <div className="mx-5 mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400 text-xs flex items-center justify-between gap-2">
+        <div className="mx-3.5 sm:mx-5 mt-3 sm:mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400 text-xs flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <OxygenIcon name="dialog-warning" size={14} className="text-red-500 shrink-0" />
             <span>{downloadError}</span>
@@ -215,10 +216,10 @@ export default function MediaPreview({ data, onReset }) {
       )}
 
       {/* Main Body: Preview & Download Actions */}
-      <div className="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="p-3.5 sm:p-5 flex flex-col lg:grid lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Left Column: Media Player / Image Viewer */}
         <div className="lg:col-span-7 flex flex-col items-center">
-          <div className="relative w-full max-w-sm aspect-square bg-[#0F172A] rounded-xl overflow-hidden flex items-center justify-center shadow-inner">
+          <div className="relative w-full max-w-sm mx-auto aspect-[4/5] sm:aspect-square bg-[#0F172A] rounded-xl sm:rounded-2xl overflow-hidden flex items-center justify-center shadow-inner">
             {currentItem.type === "video" ? (
               <video
                 key={currentQuality?.download_url || currentItem.download_url}
@@ -268,12 +269,12 @@ export default function MediaPreview({ data, onReset }) {
 
           {/* Carousel thumbnails */}
           {isCarousel && (
-            <div className="flex items-center gap-2 mt-3 max-w-sm overflow-x-auto py-1 px-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 mt-2.5 max-w-sm overflow-x-auto py-1 px-1 no-scrollbar">
               {data.items.map((item, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveSlide(idx)}
-                  className={`relative flex-shrink-0 w-11 h-11 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                  className={`relative flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                     activeSlide === idx
                       ? "border-[#635BFF] ring-2 ring-[#635BFF]/30 scale-105"
                       : "border-[#E2E8F0] dark:border-[#334155] opacity-60 hover:opacity-100"
@@ -345,10 +346,10 @@ export default function MediaPreview({ data, onReset }) {
 
         {/* Right Column: Download Buttons & Details */}
         <div className="lg:col-span-5 flex flex-col justify-between">
-          <div className="space-y-3.5">
+          <div className="space-y-3">
             {/* Caption / Bio Section */}
             {data.full_caption && (
-              <div className="p-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-xs text-[#0F172A] dark:text-[#F8FAFC]">
+              <div className="p-3 sm:p-3.5 rounded-xl bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] text-xs text-[#0F172A] dark:text-[#F8FAFC]">
                 <p className="font-semibold text-[10px] uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] mb-1">
                   {isViewer ? "Bio" : "Caption"}
                 </p>
@@ -369,7 +370,7 @@ export default function MediaPreview({ data, onReset }) {
             )}
 
             {/* Media Details & Dynamic Quality Selector Panel */}
-            <div className="p-3.5 rounded-xl border border-[#E2E8F0] dark:border-[#334155] bg-[#F8FAFC]/70 dark:bg-[#0F172A]/70 text-xs text-[#64748B] dark:text-[#94A3B8] space-y-2.5">
+            <div className="p-3 sm:p-3.5 rounded-xl border border-[#E2E8F0] dark:border-[#334155] bg-[#F8FAFC]/70 dark:bg-[#0F172A]/70 text-xs text-[#64748B] dark:text-[#94A3B8] space-y-2.5">
               {/* Media Format */}
               <div className="flex items-center justify-between">
                 <span>Format:</span>
@@ -399,7 +400,7 @@ export default function MediaPreview({ data, onReset }) {
                   </div>
 
                   {availableQualities && availableQualities.length > 1 ? (
-                    <div className="grid grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-1.5">
                       {availableQualities.map((q) => {
                         const isSelected = (currentQuality?.id === q.id);
                         return (
@@ -407,7 +408,7 @@ export default function MediaPreview({ data, onReset }) {
                             key={q.id}
                             type="button"
                             onClick={() => setSelectedQualityBySlide((prev) => ({ ...prev, [activeSlide]: q.id }))}
-                            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                            className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                               isSelected
                                 ? "bg-[#635BFF] text-white border-[#635BFF] shadow-xs shadow-[#635BFF]/30 font-bold"
                                 : "bg-white dark:bg-[#1E293B] text-[#64748B] dark:text-[#94A3B8] border-[#E2E8F0] dark:border-[#334155] hover:border-[#635BFF]/50 hover:text-[#0F172A] dark:hover:text-[#F8FAFC]"
@@ -460,13 +461,13 @@ export default function MediaPreview({ data, onReset }) {
           </div>
 
           {/* Action Download Buttons */}
-          <div className="space-y-2.5 mt-4 pt-4 border-t border-[#E2E8F0] dark:border-[#334155]">
+          <div className="space-y-2.5 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-[#E2E8F0] dark:border-[#334155]">
             {/* Main Download Button */}
             <button
               type="button"
               onClick={() => handleDownload(currentItem, activeSlide)}
               disabled={downloadingIndex !== null}
-              className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-bold text-sm text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-98 transition-all disabled:opacity-60 cursor-pointer shadow-xs shadow-[#635BFF]/20"
+              className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-98 transition-all disabled:opacity-60 cursor-pointer shadow-md shadow-[#635BFF]/20"
             >
               <OxygenIcon name="download" size={16} alt="Download" />
               <span>
@@ -487,7 +488,7 @@ export default function MediaPreview({ data, onReset }) {
               <button
                 type="button"
                 onClick={handleDownloadAll}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-[#635BFF] dark:text-[#8B5CF6] bg-[#635BFF]/10 dark:bg-[#635BFF]/20 hover:bg-[#635BFF]/20 border border-[#635BFF]/25 transition-colors cursor-pointer"
+                className="w-full min-h-[42px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-[#635BFF] dark:text-[#8B5CF6] bg-[#635BFF]/10 dark:bg-[#635BFF]/20 hover:bg-[#635BFF]/20 border border-[#635BFF]/25 transition-colors cursor-pointer"
               >
                 <OxygenIcon name="carousel" size={16} alt="All Slides" />
                 <span>Download All ({data.items.length} items)</span>

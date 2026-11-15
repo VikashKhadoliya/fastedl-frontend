@@ -30,9 +30,9 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section id="features" className="w-full py-16 sm:py-20 bg-white dark:bg-[#0F172A] border-y border-[#E2E8F0] dark:border-[#334155] transition-colors duration-200">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-xl mx-auto mb-12 sm:mb-14">
+    <section id="features" className="w-full py-10 sm:py-20 bg-white dark:bg-[#0F172A] border-y border-[#E2E8F0] dark:border-[#334155] transition-colors duration-200">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8">
+        <div className="text-center max-w-xl mx-auto mb-8 sm:mb-14">
           <span className="text-xs font-bold uppercase tracking-wider text-[#635BFF] dark:text-[#8B5CF6] mb-2 block">
             Why Choose FastEDL
           </span>

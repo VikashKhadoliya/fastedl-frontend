@@ -5,6 +5,16 @@ import CookieConsent from "../components/CookieConsent";
 import GoogleAnalytics from "../components/GoogleAnalytics";
 import { getWebSiteSchema } from "../lib/seo";
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0F172A" },
+  ],
+};
+
 export const metadata = {
   metadataBase: new URL("https://fastedl.app"),
   title: {

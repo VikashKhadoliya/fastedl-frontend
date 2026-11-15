@@ -40,10 +40,10 @@ export default function HowToUseSteps() {
   ];
 
   return (
-    <section className="w-full py-16 sm:py-20 bg-[#F8FAFC] dark:bg-[#0F172A] transition-colors duration-200">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="w-full py-10 sm:py-20 bg-[#F8FAFC] dark:bg-[#0F172A] transition-colors duration-200">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-14">
+        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-14">
           <span className="text-xs font-bold uppercase tracking-wider text-[#635BFF] dark:text-[#8B5CF6] mb-2 block">
             Simple Workflow
           </span>

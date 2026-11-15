@@ -143,35 +143,38 @@ export default function DownloaderForm({ initialTab = "video" }) {
 
   return (
     <div id="downloader" className="w-full max-w-3xl mx-auto">
-      {/* Category Tabs: Clean Segmented Bar */}
-      <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4 overflow-x-auto py-1 px-1 scrollbar-none no-scrollbar">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-xs ${
-                isActive
-                  ? "bg-[#635BFF] text-white shadow-md shadow-[#635BFF]/25 font-bold"
-                  : "bg-white dark:bg-[#1E293B] text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#334155]"
-              }`}
-            >
-              <OxygenIcon name={tab.icon} size={16} alt={tab.label} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Category Tabs: Smooth Horizontally Scrollable on Mobile, Centered on Desktop */}
+      <div className="w-full relative mb-2.5 sm:mb-4 overflow-hidden">
+        <div className="flex items-center justify-start sm:justify-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-1 scrollbar-none no-scrollbar touch-pan-x">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 shadow-xs active:scale-95 ${
+                  isActive
+                    ? "bg-[#635BFF] text-white shadow-md shadow-[#635BFF]/25 font-bold border border-[#635BFF]"
+                    : "bg-white dark:bg-[#1E293B] text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#334155]"
+                }`}
+              >
+                <OxygenIcon name={tab.icon} size={15} alt={tab.label} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Main Input Form Container */}
-      <div className="bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] dark:border-[#334155] shadow-xl p-3 sm:p-4 transition-all">
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-3">
-          {/* Input Box with Paste & Clear */}
-          <div className="relative flex-1 w-full">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#94A3B8]">
-              <OxygenIcon name="search" size={18} alt="Search" />
+      {/* Main Input Form Container - Compact, clean, and mobile-first */}
+      <div className="w-full bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] dark:border-[#334155] shadow-lg sm:shadow-xl p-2.5 sm:p-3.5 transition-all">
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5">
+          {/* Input Box with Adaptive In-Input & Below-Input Actions */}
+          <div className="relative flex-1 w-full min-w-0">
+            {/* Search/Link Icon */}
+            <div className="absolute inset-y-0 left-0 pl-3.5 sm:pl-4 flex items-center pointer-events-none text-[#94A3B8]">
+              <OxygenIcon name="search" size={17} alt="Search" />
             </div>
 
             <input
@@ -183,39 +186,55 @@ export default function DownloaderForm({ initialTab = "video" }) {
               }}
               placeholder={t("form.placeholder", "Paste your Instagram link here")}
               disabled={loading}
-              className="w-full pl-11 pr-36 sm:pr-40 py-3.5 sm:py-4 text-sm sm:text-base text-[#0F172A] dark:text-[#F8FAFC] bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] rounded-xl sm:rounded-2xl placeholder:text-[#94A3B8] focus:outline-none focus:bg-white dark:focus:bg-[#0F172A] focus:border-[#635BFF] focus:ring-4 focus:ring-[#635BFF]/15 transition-all"
+              className="w-full pl-10 pr-10 sm:pr-36 py-3 sm:py-3.5 text-xs sm:text-sm md:text-base text-[#0F172A] dark:text-[#F8FAFC] bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] rounded-xl sm:rounded-2xl placeholder:text-[#94A3B8] focus:outline-none focus:bg-white dark:focus:bg-[#0F172A] focus:border-[#635BFF] focus:ring-3 focus:ring-[#635BFF]/15 transition-all truncate"
             />
 
-            {/* Inner actions: Clear & Paste */}
-            <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center gap-1.5">
-              {url && !loading && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="p-1 rounded-md text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-white transition-colors cursor-pointer"
-                  title="Clear input"
-                  aria-label="Clear input"
-                >
-                  <OxygenIcon name="close" size={14} alt="Clear" />
-                </button>
-              )}
+            {/* Clear Input Button: Always easily accessible when URL is present */}
+            {url && !loading && (
               <button
                 type="button"
-                onClick={handlePaste}
-                disabled={loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#635BFF] dark:text-[#8B5CF6] bg-[#635BFF]/10 dark:bg-[#635BFF]/20 hover:bg-[#635BFF]/20 transition-colors cursor-pointer"
+                onClick={handleClear}
+                className="absolute inset-y-0 right-2 sm:right-32 flex items-center justify-center w-7 h-7 my-auto rounded-lg text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                title="Clear input"
+                aria-label="Clear input"
               >
-                <OxygenIcon name="paste" size={14} alt="Paste" />
-                <span>{t("form.pasteLink", "Paste Link")}</span>
+                <OxygenIcon name="close" size={13} alt="Clear" />
               </button>
-            </div>
+            )}
+
+            {/* Desktop-only: In-input Paste Button (Clean, no text overlap on wide screens) */}
+            <button
+              type="button"
+              onClick={handlePaste}
+              disabled={loading}
+              className="hidden sm:inline-flex absolute inset-y-0 right-1.5 my-auto h-9 items-center gap-1.5 px-3 rounded-xl text-xs font-bold text-[#635BFF] dark:text-[#8B5CF6] bg-[#635BFF]/10 dark:bg-[#635BFF]/20 hover:bg-[#635BFF]/20 active:scale-95 transition-all cursor-pointer"
+            >
+              <OxygenIcon name="paste" size={14} alt="Paste" />
+              <span>{t("form.pasteLink", "Paste Link")}</span>
+            </button>
+          </div>
+
+          {/* Mobile Action Sub-bar: Dedicated Paste Link + Format Indicator (Visible < sm) */}
+          <div className="flex sm:hidden items-center justify-between px-1 pt-0.5 pb-0.5">
+            <span className="text-[11px] text-[#94A3B8] dark:text-[#64748B] font-medium">
+              Reels &bull; Posts &bull; Stories &bull; Slides
+            </span>
+            <button
+              type="button"
+              onClick={handlePaste}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#635BFF] dark:text-[#8B5CF6] bg-[#635BFF]/10 dark:bg-[#635BFF]/20 active:bg-[#635BFF]/30 transition-colors cursor-pointer"
+            >
+              <OxygenIcon name="paste" size={13} alt="Paste" />
+              <span>{t("form.pasteLink", "Paste Link")}</span>
+            </button>
           </div>
 
           {/* Primary CTA Button: Download */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto min-w-[145px] px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-sm sm:text-base font-bold text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-98 shadow-md shadow-[#635BFF]/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+            className="w-full sm:w-auto min-w-[140px] h-12 sm:h-[48px] px-6 sm:px-8 rounded-xl sm:rounded-2xl text-sm sm:text-base font-bold text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-[0.98] shadow-md shadow-[#635BFF]/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
           >
             {loading ? (
               <>
@@ -233,7 +252,7 @@ export default function DownloaderForm({ initialTab = "video" }) {
 
         {/* Loading Progress State */}
         {loading && (
-          <div className="mt-3 pt-3 border-t border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center gap-2 text-xs text-[#635BFF] dark:text-[#8B5CF6] font-medium">
+          <div className="mt-2.5 pt-2.5 border-t border-[#E2E8F0] dark:border-[#334155] flex items-center justify-center gap-2 text-xs text-[#635BFF] dark:text-[#8B5CF6] font-medium">
             <OxygenIcon name="refresh" size={14} className="animate-spin" alt="Loading" />
             <span>{loadingStep || t("form.connecting", "Fetching media preview...")}</span>
           </div>
@@ -241,15 +260,15 @@ export default function DownloaderForm({ initialTab = "video" }) {
 
         {/* Error Alert Display */}
         {error && (
-          <div className="mt-3 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-200 flex items-start gap-3 text-xs sm:text-sm">
-            <OxygenIcon name="close" size={16} className="mt-0.5 shrink-0" alt="Error" />
-            <div className="flex-1">
+          <div className="mt-2.5 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-200 flex items-start gap-2.5 text-xs sm:text-sm">
+            <OxygenIcon name="close" size={15} className="mt-0.5 shrink-0" alt="Error" />
+            <div className="flex-1 min-w-0">
               <p className="font-semibold">{t("form.errorPrefix", "Unable to load media")}</p>
               <p className="mt-0.5 text-xs text-rose-700 dark:text-rose-300 leading-relaxed">{error}</p>
             </div>
             <button
               onClick={() => setError(null)}
-              className="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 p-0.5 cursor-pointer"
+              className="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 p-0.5 cursor-pointer shrink-0"
               aria-label="Dismiss alert"
             >
               <OxygenIcon name="close" size={12} alt="Dismiss" />

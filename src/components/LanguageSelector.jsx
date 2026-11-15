@@ -46,7 +46,7 @@ export default function LanguageSelector({ className = "", isMobile = false }) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 h-9 px-2.5 rounded-xl border border-[#E2E8F0] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-xs font-semibold text-[#0F172A] dark:text-[#F8FAFC] hover:bg-[#F8FAFC] dark:hover:bg-[#334155]/60 transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#635BFF]/30 active:scale-95"
+        className="flex items-center justify-center gap-1.5 h-9 w-9 sm:w-auto px-0 sm:px-2.5 rounded-xl border border-[#E2E8F0] dark:border-[#334155] bg-white dark:bg-[#1E293B] text-xs font-semibold text-[#0F172A] dark:text-[#F8FAFC] hover:bg-[#F8FAFC] dark:hover:bg-[#334155]/60 transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#635BFF]/30 active:scale-95"
         title={t("nav.selectLanguage", "Language")}
         aria-label={t("nav.selectLanguage", "Language")}
         aria-expanded={isOpen}
@@ -55,7 +55,7 @@ export default function LanguageSelector({ className = "", isMobile = false }) {
         <span className="hidden sm:inline uppercase text-[11px] font-bold text-[#64748B] dark:text-[#94A3B8]">
           {currentLanguage.code}
         </span>
-        <span className={`flex items-center transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+        <span className={`hidden sm:flex items-center transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
           <OxygenIcon name="arrow-down" size={11} alt="Toggle" />
         </span>
       </button>
@@ -65,7 +65,7 @@ export default function LanguageSelector({ className = "", isMobile = false }) {
         <div
           className={`absolute ${
             isMobile ? "left-0 right-0" : "right-0"
-          } mt-2 w-72 max-w-[90vw] rounded-2xl bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150`}
+          } mt-2 w-72 max-w-[85vw] rounded-2xl bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150`}
         >
           {/* Header & Search */}
           <div className="p-2.5 border-b border-[#E2E8F0] dark:border-[#334155] bg-[#F8FAFC] dark:bg-[#0F172A]">

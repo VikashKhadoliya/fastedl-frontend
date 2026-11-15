@@ -43,6 +43,8 @@
 html {
   transition: background-color 0.2s ease, color 0.2s ease;
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 body {
@@ -50,6 +52,20 @@ body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  max-width: 100vw;
+  position: relative;
+}
+
+/* Touch-optimized horizontal scrolling without unsightly scrollbars */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 [dir="rtl"] {
