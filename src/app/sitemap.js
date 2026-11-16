@@ -7,6 +7,7 @@ export default function sitemap() {
     // Dedicated Downloader Pages
     { url: `${baseUrl}/instagram-video-downloader`, lastModified: currentDate, changeFrequency: "daily", priority: 0.95 },
     { url: `${baseUrl}/instagram-reels-downloader`, lastModified: currentDate, changeFrequency: "daily", priority: 0.95 },
+    { url: `${baseUrl}/instagram-reel-to-mp3`, lastModified: currentDate, changeFrequency: "daily", priority: 0.95 },
     { url: `${baseUrl}/instagram-photo-downloader`, lastModified: currentDate, changeFrequency: "daily", priority: 0.95 },
     { url: `${baseUrl}/instagram-carousel-downloader`, lastModified: currentDate, changeFrequency: "daily", priority: 0.95 },
     { url: `${baseUrl}/instagram-story-downloader`, lastModified: currentDate, changeFrequency: "daily", priority: 0.95 },

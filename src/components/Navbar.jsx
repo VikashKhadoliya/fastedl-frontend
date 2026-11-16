@@ -17,6 +17,7 @@ export default function Navbar() {
   const downloadTools = [
     { name: "Video Downloader", href: "/instagram-video-downloader", icon: "video-x-generic", desc: "Full HD 1080p MP4 with sound" },
     { name: "Reels Downloader", href: "/instagram-reels-downloader", icon: "media-playlist", desc: "Shorts & vertical reels saver" },
+    { name: "Reel to MP3", href: "/instagram-reel-to-mp3", icon: "audio", desc: "Extract audio tracks in 192k/320k MP3" },
     { name: "Photo Downloader", href: "/instagram-photo-downloader", icon: "image-x-generic", desc: "Original high-res JPG images" },
     { name: "Carousel Downloader", href: "/instagram-carousel-downloader", icon: "view-media-album-cover", desc: "Batch download all slides" },
     { name: "Story Downloader", href: "/instagram-story-downloader", icon: "chronometer", desc: "Stories & highlights anonymously" },

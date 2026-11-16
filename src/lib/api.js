@@ -170,3 +170,17 @@ export function buildDownloadProxyUrl(directUrl, filename, audioUrl = null, qual
   }
   return `${base}?${params.toString()}`;
 }
+
+export function buildDownloadMp3ProxyUrl(sourceUrl, filename, bitrate = 192, inline = false) {
+  if (!sourceUrl) return "";
+  const base = `${getBackendBaseUrl()}/api/download-mp3`;
+  const params = new URLSearchParams({
+    url: sourceUrl,
+    filename: filename || "fastedl_audio",
+    bitrate: String(bitrate || 192)
+  });
+  if (inline) {
+    params.set("inline", "true");
+  }
+  return `${base}?${params.toString()}`;
+}

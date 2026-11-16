@@ -11,6 +11,7 @@ export default function Footer() {
   const toolLinks = [
     { label: "Instagram Video Downloader", href: "/instagram-video-downloader" },
     { label: "Instagram Reels Downloader", href: "/instagram-reels-downloader" },
+    { label: "Instagram Reel to MP3", href: "/instagram-reel-to-mp3" },
     { label: "Instagram Photo Downloader", href: "/instagram-photo-downloader" },
     { label: "Instagram Carousel Downloader", href: "/instagram-carousel-downloader" },
     { label: "Instagram Story Saver", href: "/instagram-story-downloader" },

@@ -108,7 +108,7 @@ async function proxyRequest(request, { params }) {
     });
 
     // For media download streams, forward the live ReadableStream directly without buffering in memory
-    const isStream = subPath === "download" || responseHeaders.get("content-disposition");
+    const isStream = subPath === "download" || subPath === "download-mp3" || responseHeaders.get("content-disposition");
     const responseBody = isStream ? backendRes.body : await backendRes.arrayBuffer();
 
     return new NextResponse(responseBody, {

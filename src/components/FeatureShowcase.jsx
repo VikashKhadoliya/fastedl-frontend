@@ -51,6 +51,20 @@ export default function FeatureShowcase() {
       reversed: false,
     },
     {
+      id: "mp3",
+      icon: "media-playlist",
+      title: "Instagram Reel to MP3 Downloader",
+      badge: "Crystal Clear Audio",
+      description:
+        "Extract high-definition audio and background tracks directly from supported Instagram Reels. Convert seamlessly to 192k or 320k MP3 audio with instant in-browser playback preview.",
+      link: "/instagram-reel-to-mp3",
+      action: "Convert to MP3",
+      image: "/images/fastedl-creative/07-reels-downloader.png",
+      width: 355,
+      height: 160,
+      reversed: true,
+    },
+    {
       id: "story",
       icon: "story",
       title: "Instagram Story Saver",
