@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AdminNav from "@/components/AdminNav";
 import OxygenIcon from "@/components/OxygenIcon";
+import { useAdminAuth } from "@/lib/useAdminAuth";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminMediaLibraryPage() {
-  const router = useRouter();
+  const { adminUser, loading: authLoading } = useAdminAuth();
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -24,23 +25,18 @@ export default function AdminMediaLibraryPage() {
   const fileInputRef = useRef(null);
 
   const loadMedia = async () => {
-    const token = localStorage.getItem("fastedl_admin_token");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/media", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.status === 401) {
-        router.push("/admin/login");
-        return;
+      const { data, error } = await supabase
+        .from("media_assets")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Failed to fetch media assets", error);
+      } else if (data) {
+        setAssets(data);
       }
-      const data = await res.json();
-      setAssets(data.assets || []);
     } catch (e) {
       console.error("Failed to fetch media assets", e);
     } finally {
@@ -49,8 +45,10 @@ export default function AdminMediaLibraryPage() {
   };
 
   useEffect(() => {
-    loadMedia();
-  }, []);
+    if (adminUser) {
+      loadMedia();
+    }
+  }, [adminUser]);
 
   const handleUpload = async (e) => {
     const files = e.target.files;
@@ -58,30 +56,45 @@ export default function AdminMediaLibraryPage() {
 
     setUploading(true);
     setUploadError("");
-    const token = localStorage.getItem("fastedl_admin_token");
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("alt_text", file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "));
-
       try {
-        const res = await fetch("/api/admin/media/upload", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData
-        });
+        const ext = file.name.split(".").pop();
+        const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
-        if (res.ok) {
-          const d = await res.json();
-          setAssets((prev) => [d.asset, ...prev]);
-        } else {
-          const err = await res.json();
-          setUploadError(err.detail || "Upload failed. Allowed: PNG, JPG, WEBP, GIF, SVG (up to 15MB).");
-        }
+        const { error: uploadErr } = await supabase.storage
+          .from("media")
+          .upload(cleanFileName, file, { cacheControl: "3600", upsert: false });
+
+        if (uploadErr) throw uploadErr;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("media")
+          .getPublicUrl(cleanFileName);
+
+        const altText = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+        const payload = {
+          filename: file.name,
+          file_path: publicUrl,
+          file_size: file.size,
+          mime_type: file.type,
+          alt_text: altText,
+          created_at: new Date().toISOString()
+        };
+
+        const { data: insertedAsset, error: insertErr } = await supabase
+          .from("media_assets")
+          .insert([payload])
+          .select()
+          .single();
+
+        if (insertErr) throw insertErr;
+
+        setAssets((prev) => [insertedAsset || payload, ...prev]);
       } catch (err) {
-        setUploadError("Network error uploading file.");
+        console.error(err);
+        setUploadError(err.message || "Upload failed. Allowed: PNG, JPG, WEBP, GIF, SVG (up to 15MB).");
       }
     }
 
@@ -90,7 +103,11 @@ export default function AdminMediaLibraryPage() {
   };
 
   const handleCopyUrl = (asset) => {
-    const fullUrl = typeof window !== "undefined" ? `${window.location.origin}${asset.file_path}` : asset.file_path;
+    const fullUrl = asset.file_path?.startsWith("http")
+      ? asset.file_path
+      : typeof window !== "undefined"
+      ? `${window.location.origin}${asset.file_path}`
+      : asset.file_path;
     navigator.clipboard.writeText(fullUrl);
     setCopiedId(asset.id);
     setTimeout(() => setCopiedId(null), 2500);
@@ -105,52 +122,50 @@ export default function AdminMediaLibraryPage() {
   const handleSaveAltText = async () => {
     if (!selectedAsset) return;
     setUpdatingAlt(true);
-    const token = localStorage.getItem("fastedl_admin_token");
 
     try {
-      const res = await fetch(`/api/admin/media/${selectedAsset.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ alt_text: altTextDraft })
-      });
+      const { error } = await supabase
+        .from("media_assets")
+        .update({ alt_text: altTextDraft })
+        .eq("id", selectedAsset.id);
 
-      if (res.ok) {
-        setAssets((prev) =>
-          prev.map((a) => (a.id === selectedAsset.id ? { ...a, alt_text: altTextDraft } : a))
-        );
-        setSelectedAsset((prev) => (prev ? { ...prev, alt_text: altTextDraft } : null));
-        setAltSavedMsg(true);
-        setTimeout(() => setAltSavedMsg(false), 2500);
-      }
+      if (error) throw error;
+
+      setAssets((prev) =>
+        prev.map((a) => (a.id === selectedAsset.id ? { ...a, alt_text: altTextDraft } : a))
+      );
+      setSelectedAsset((prev) => (prev ? { ...prev, alt_text: altTextDraft } : null));
+      setAltSavedMsg(true);
+      setTimeout(() => setAltSavedMsg(false), 2500);
     } catch (e) {
+      console.error(e);
       alert("Failed to update image alt text.");
     } finally {
       setUpdatingAlt(false);
     }
   };
 
-  const handleDelete = async (id, filename) => {
+  const handleDelete = async (id, filename, filePath = null) => {
     if (!confirm(`Are you sure you want to permanently delete "${filename}"? This will remove the image file from storage.`)) {
       return;
     }
 
-    const token = localStorage.getItem("fastedl_admin_token");
+    const pathToCheck = filePath || selectedAsset?.file_path;
     try {
-      const res = await fetch(`/api/admin/media/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (res.ok) {
-        setAssets((prev) => prev.filter((a) => a.id !== id));
-        if (selectedAsset?.id === id) setSelectedAsset(null);
-      } else {
-        alert("Failed to delete media asset.");
+      if (pathToCheck && pathToCheck.includes("/storage/v1/object/public/media/")) {
+        const storagePath = pathToCheck.split("/storage/v1/object/public/media/")[1];
+        if (storagePath) {
+          await supabase.storage.from("media").remove([storagePath]);
+        }
       }
+
+      const { error } = await supabase.from("media_assets").delete().eq("id", id);
+      if (error) throw error;
+
+      setAssets((prev) => prev.filter((a) => a.id !== id));
+      if (selectedAsset?.id === id) setSelectedAsset(null);
     } catch (e) {
+      console.error(e);
       alert("Error deleting media file.");
     }
   };
@@ -161,6 +176,19 @@ export default function AdminMediaLibraryPage() {
       a.filename.toLowerCase().includes(search.toLowerCase()) ||
       a.alt_text?.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] text-slate-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-[#635BFF] border-t-transparent animate-spin" />
+          <span className="text-xs text-slate-400 font-medium tracking-wide">
+            Verifying Admin Authorization...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col font-sans">

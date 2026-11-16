@@ -1,16 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OxygenIcon from "@/components/OxygenIcon";
+import { supabase, checkIsAdmin } from "@/lib/supabaseClient";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("admin");
+  const [email, setEmail] = useState("admin@fastedl.app");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // If already logged in as a verified admin, auto-redirect to /admin
+  useEffect(() => {
+    async function checkExistingSession() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.user) {
+          const isAdmin = await checkIsAdmin(session.user);
+          if (isAdmin) {
+            router.push("/admin");
+          }
+        }
+      } catch (_) {}
+    }
+    checkExistingSession();
+  }, [router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,34 +37,39 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password })
+      // 1. Authenticate with Supabase Auth
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       });
 
-      let data;
-      try {
-        data = await res.json();
-      } catch (parseErr) {
-        data = { detail: `Server responded with status ${res.status}` };
+      if (authError || !data?.user) {
+        setError(authError?.message || "Invalid admin email or password.");
+        setLoading(false);
+        return;
       }
 
-      if (res.ok && data?.token) {
-        localStorage.setItem("fastedl_admin_token", data.token);
-        localStorage.setItem("fastedl_admin_user", JSON.stringify(data.user || { username: data.username || username }));
-        router.push("/admin");
-      } else {
-        if (res.status === 401) {
-          setError(data?.detail || "Invalid admin username or password. Default is admin / FastEDL@Admin2026!");
-        } else if (res.status === 502) {
-          setError("FastEDL backend service is unreachable. Ensure the backend server is running.");
-        } else {
-          setError(data?.detail || "Failed to log in to admin portal.");
-        }
+      // 2. Explicit Admin Authorization Check against public.admin_users
+      const isAdmin = await checkIsAdmin(data.user);
+      if (!isAdmin) {
+        // Sign out unauthorized user immediately
+        await supabase.auth.signOut();
+        setError(
+          "Access Denied: This account is authenticated but not listed in public.admin_users."
+        );
+        setLoading(false);
+        return;
       }
+
+      // 3. Clear any legacy localStorage tokens and redirect to admin dashboard
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("fastedl_admin_token");
+        localStorage.removeItem("fastedl_admin_user");
+      }
+
+      router.push("/admin");
     } catch (err) {
-      setError("Network error connecting to admin service. Ensure the FastEDL backend service is running.");
+      setError("An unexpected error occurred during admin sign-in. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -59,7 +83,7 @@ export default function AdminLoginPage() {
             <OxygenIcon name="security-high" size={24} className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-black tracking-tight text-white">FastEDL Admin Portal</h1>
-          <p className="text-xs text-slate-400 mt-1">Platform CMS, Creator Tools & Message Center</p>
+          <p className="text-xs text-slate-400 mt-1">Platform CMS, Media & Message Center</p>
         </div>
 
         {error && (
@@ -72,14 +96,15 @@ export default function AdminLoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-              Username
+              Admin Email
             </label>
             <input
-              type="text"
+              type="email"
               required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. admin"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@fastedl.app"
+              autoComplete="email"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF]"
             />
           </div>
@@ -89,9 +114,6 @@ export default function AdminLoginPage() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
                 Password
               </label>
-              <span className="text-[10px] text-slate-400">
-                Default: FastEDL@Admin2026!
-              </span>
             </div>
             <input
               type="password"
@@ -99,6 +121,7 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
+              autoComplete="current-password"
               className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF]"
             />
           </div>
@@ -116,7 +139,7 @@ export default function AdminLoginPage() {
             ) : (
               <>
                 <OxygenIcon name="dialog-ok-apply" size={16} className="w-4 h-4 text-white" />
-                Sign In to Admin
+                Sign In with Supabase Auth
               </>
             )}
           </button>

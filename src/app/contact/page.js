@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import OxygenIcon from "@/components/OxygenIcon";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -33,26 +34,22 @@ export default function ContactPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/content/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          subject: formData.subject,
-          message: formData.message.trim(),
-        }),
-      });
+      const { error: insertError } = await supabase.from("contact_messages").insert([{
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject,
+        message: formData.message.trim(),
+        status: "unread",
+        created_at: new Date().toISOString()
+      }]);
 
-      if (res.ok) {
-        setSubmitted(true);
-      } else {
-        const data = await res.json();
-        setError(data.detail || "Unable to send message. Please try again later.");
+      if (insertError) {
+        throw insertError;
       }
+      setSubmitted(true);
     } catch (err) {
       console.error(err);
-      setError("Network error connecting to support server.");
+      setError("Unable to send message. Please try again later.");
     } finally {
       setSubmitting(false);
     }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import OxygenIcon from "@/components/OxygenIcon";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function GuidesHubPage() {
   const [articles, setArticles] = useState([]);
@@ -60,27 +61,20 @@ export default function GuidesHubPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [artsRes, catsRes] = await Promise.all([
-          fetch("/api/content/articles"),
-          fetch("/api/content/categories")
-        ]);
+        const { data, error } = await supabase
+          .from("articles")
+          .select("*")
+          .eq("status", "published")
+          .order("created_at", { ascending: false });
 
-        if (artsRes.ok) {
-          const artsData = await artsRes.json();
-          if (artsData.articles && artsData.articles.length > 0) {
-            setArticles(artsData.articles);
-          } else {
-            setArticles(fallbackArticles);
+        if (!error && data && data.length > 0) {
+          setArticles(data);
+          const uniqueCats = Array.from(new Set(data.map((a) => a.category).filter(Boolean)));
+          if (uniqueCats.length > 0) {
+            setCategories(uniqueCats.map((c) => ({ id: c, name: c.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) })));
           }
         } else {
           setArticles(fallbackArticles);
-        }
-
-        if (catsRes.ok) {
-          const catsData = await catsRes.json();
-          if (catsData.categories) {
-            setCategories(catsData.categories);
-          }
         }
       } catch (e) {
         console.warn("Using fallback articles data:", e);

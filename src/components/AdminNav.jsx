@@ -3,14 +3,20 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import OxygenIcon from "@/components/OxygenIcon";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminNav() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem("fastedl_admin_token");
-    localStorage.removeItem("fastedl_admin_user");
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (_) {}
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("fastedl_admin_token");
+      localStorage.removeItem("fastedl_admin_user");
+    }
     router.push("/admin/login");
   };
 

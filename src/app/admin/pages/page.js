@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AdminNav from "@/components/AdminNav";
 import OxygenIcon from "@/components/OxygenIcon";
+import { useAdminAuth } from "@/lib/useAdminAuth";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminPagesManagerPage() {
-  const router = useRouter();
+  const { adminUser, loading: authLoading } = useAdminAuth();
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("all");
@@ -61,23 +62,18 @@ export default function AdminPagesManagerPage() {
 
   // Load Pages
   const loadPages = async () => {
-    const token = localStorage.getItem("fastedl_admin_token");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/pages", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.status === 401) {
-        router.push("/admin/login");
-        return;
+      const { data, error } = await supabase
+        .from("pages")
+        .select("*")
+        .order("updated_at", { ascending: false });
+
+      if (error) {
+        console.error("Supabase loadPages error:", error);
+      } else if (data) {
+        setPages(data);
       }
-      const data = await res.json();
-      setPages(data.pages || []);
     } catch (err) {
       console.error("Failed to fetch pages", err);
     } finally {
@@ -86,8 +82,10 @@ export default function AdminPagesManagerPage() {
   };
 
   useEffect(() => {
-    loadPages();
-  }, []);
+    if (adminUser) {
+      loadPages();
+    }
+  }, [adminUser]);
 
   // Open Create Page Modal
   const handleOpenCreate = () => {
@@ -120,7 +118,6 @@ export default function AdminPagesManagerPage() {
 
   // Open Edit Page Modal
   const handleOpenEdit = async (pageItem) => {
-    const token = localStorage.getItem("fastedl_admin_token");
     setEditingId(pageItem.id);
     setTitle(pageItem.title || "");
     setSlug(pageItem.slug || "");
@@ -131,7 +128,7 @@ export default function AdminPagesManagerPage() {
     setFeaturedImage(pageItem.featured_image || "");
     setAuthor(pageItem.author || "FastEDL Editorial Team");
     setStatus(pageItem.status || "draft");
-    setIsSystem(pageItem.is_system || 0);
+    setIsSystem(pageItem.is_system ? 1 : 0);
     setSeoTitle(pageItem.seo_title || "");
     setSeoDescription(pageItem.seo_description || "");
     setFocusKeyword(pageItem.focus_keyword || "");
@@ -146,14 +143,16 @@ export default function AdminPagesManagerPage() {
     setActiveTab("editor");
     setIsEditorOpen(true);
 
-    // Fetch detailed page versions
+    // Fetch detailed page versions from Supabase
     try {
-      const res = await fetch(`/api/admin/pages/${pageItem.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const detail = await res.json();
-        setVersions(detail.versions || []);
+      const { data: verData, error: verErr } = await supabase
+        .from("page_versions")
+        .select("*")
+        .eq("page_id", pageItem.id)
+        .order("version_number", { ascending: false });
+
+      if (!verErr && verData) {
+        setVersions(verData);
       }
     } catch (e) {
       console.error("Failed to load page versions", e);
@@ -176,7 +175,6 @@ export default function AdminPagesManagerPage() {
 
   // Save Page (Draft or Publish)
   const handleSave = async (forcedStatus = null) => {
-    const token = localStorage.getItem("fastedl_admin_token");
     const targetStatus = forcedStatus || status;
 
     if (!title.trim()) {
@@ -191,9 +189,12 @@ export default function AdminPagesManagerPage() {
     setSaving(true);
     setErrorMessage("");
 
+    const now = new Date().toISOString();
+    const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-/]+/g, "-");
+
     const payload = {
       title,
-      slug: slug.trim().toLowerCase(),
+      slug: cleanSlug,
       main_heading: mainHeading,
       subheading: subheading,
       category: category,
@@ -201,6 +202,7 @@ export default function AdminPagesManagerPage() {
       featured_image: featuredImage,
       author: author,
       status: targetStatus,
+      is_system: Boolean(isSystem),
       seo_title: seoTitle || title,
       seo_description: seoDescription,
       focus_keyword: focusKeyword,
@@ -209,36 +211,56 @@ export default function AdminPagesManagerPage() {
       og_description: ogDescription || seoDescription,
       og_image: ogImage || featuredImage,
       robots: robots,
-      version_note: versionNote || `Update by ${author} on ${new Date().toLocaleDateString()}`
+      updated_at: now
     };
 
     try {
-      const url = editingId ? `/api/admin/pages/${editingId}` : "/api/admin/pages";
-      const method = editingId ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setSaveSuccess(true);
-        setStatus(targetStatus);
-        setTimeout(() => setSaveSuccess(false), 3000);
-        await loadPages();
-        if (!editingId && data.id) {
+      let pageId = editingId;
+      if (editingId) {
+        const { error } = await supabase
+          .from("pages")
+          .update(payload)
+          .eq("id", editingId);
+        if (error) throw error;
+      } else {
+        payload.created_at = now;
+        const { data, error } = await supabase
+          .from("pages")
+          .insert([payload])
+          .select("id")
+          .single();
+        if (error) throw error;
+        if (data?.id) {
+          pageId = data.id;
           setEditingId(data.id);
         }
-      } else {
-        setErrorMessage(data.detail || "Failed to save page. Please try again.");
       }
+
+      // Record snapshot in page_versions
+      if (pageId) {
+        try {
+          const nextVerNum = (versions.length > 0 ? (versions[0].version_number || versions.length) : 0) + 1;
+          await supabase.from("page_versions").insert([{
+            page_id: pageId,
+            version_number: nextVerNum,
+            title,
+            content,
+            version_note: versionNote || `Saved by ${author} on ${new Date().toLocaleDateString()}`,
+            author: author,
+            created_at: now
+          }]);
+        } catch (vErr) {
+          console.warn("Could not save version record:", vErr);
+        }
+      }
+
+      setSaveSuccess(true);
+      setStatus(targetStatus);
+      setTimeout(() => setSaveSuccess(false), 3000);
+      await loadPages();
     } catch (e) {
-      setErrorMessage("Network error saving page.");
+      console.error(e);
+      setErrorMessage(e.message || "Failed to save page. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -250,21 +272,14 @@ export default function AdminPagesManagerPage() {
       return;
     }
 
-    const token = localStorage.getItem("fastedl_admin_token");
     try {
-      const res = await fetch(`/api/admin/pages/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        if (editingId === id) setIsEditorOpen(false);
-        await loadPages();
-      } else {
-        const d = await res.json();
-        alert(d.detail || "Failed to delete page.");
-      }
+      const { error } = await supabase.from("pages").delete().eq("id", id);
+      if (error) throw error;
+      if (editingId === id) setIsEditorOpen(false);
+      await loadPages();
     } catch (e) {
-      alert("Error deleting page.");
+      console.error(e);
+      alert(e.message || "Error deleting page.");
     }
   };
 
@@ -362,14 +377,14 @@ export default function AdminPagesManagerPage() {
   const handleOpenMediaPicker = async () => {
     setIsMediaPickerOpen(true);
     setMediaLoading(true);
-    const token = localStorage.getItem("fastedl_admin_token");
     try {
-      const res = await fetch("/api/admin/media", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const d = await res.json();
-        setMediaAssets(d.assets || []);
+      const { data, error } = await supabase
+        .from("media_assets")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setMediaAssets(data);
       }
     } catch (e) {
       console.error("Error loading media", e);
@@ -384,25 +399,42 @@ export default function AdminPagesManagerPage() {
     if (!file) return;
 
     setUploadingImage(true);
-    const token = localStorage.getItem("fastedl_admin_token");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("alt_text", file.name.replace(/\.[^/.]+$/, ""));
-
     try {
-      const res = await fetch("/api/admin/media/upload", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      });
-      if (res.ok) {
-        const d = await res.json();
-        setMediaAssets((prev) => [d.asset, ...prev]);
-      } else {
-        alert("Image upload failed. Allowed formats: PNG, JPG, WEBP, GIF, SVG (up to 15MB).");
-      }
+      const ext = file.name.split(".").pop();
+      const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("media")
+        .upload(cleanFileName, file, { cacheControl: "3600", upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("media")
+        .getPublicUrl(cleanFileName);
+
+      const altText = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+      const assetPayload = {
+        filename: file.name,
+        file_path: publicUrl,
+        file_size: file.size,
+        mime_type: file.type,
+        alt_text: altText,
+        created_at: new Date().toISOString()
+      };
+
+      const { data: insertedAsset, error: insertError } = await supabase
+        .from("media_assets")
+        .insert([assetPayload])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      setMediaAssets((prev) => [insertedAsset || assetPayload, ...prev]);
     } catch (err) {
-      alert("Network error uploading image.");
+      console.error(err);
+      alert(err.message || "Network error uploading image to Supabase Storage.");
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -440,6 +472,19 @@ export default function AdminPagesManagerPage() {
     subheading ||
     "Read this guide and page on FastEDL, your premier Instagram media tools and content platform.";
   const displayUrl = `https://fastedl.app${slug === "home" ? "/" : slug.startsWith("/") ? slug : `/${slug}`}`;
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] text-slate-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-[#635BFF] border-t-transparent animate-spin" />
+          <span className="text-xs text-slate-400 font-medium tracking-wide">
+            Verifying Admin Authorization...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col font-sans">

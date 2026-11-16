@@ -7,6 +7,7 @@ import OxygenIcon from "@/components/OxygenIcon";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FAQSection from "@/components/FAQSection";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function ArticleDetailPage() {
   const params = useParams();
@@ -95,16 +96,31 @@ export default function ArticleDetailPage() {
 
     async function fetchArticle() {
       try {
-        const res = await fetch(`/api/content/articles/${slug}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.article) {
-            setArticle(data.article);
-            setRelated(data.related || []);
-            extractToc(data.article.content);
-            return;
+        const { data, error: sbErr } = await supabase
+          .from("articles")
+          .select("*")
+          .eq("slug", slug)
+          .eq("status", "published")
+          .maybeSingle();
+
+        if (!sbErr && data) {
+          const faqs = Array.isArray(data.faq_json) ? data.faq_json : [];
+          setArticle({ ...data, faqs });
+          extractToc(data.content);
+
+          const { data: relData } = await supabase
+            .from("articles")
+            .select("id, slug, title, read_time")
+            .eq("category", data.category)
+            .neq("id", data.id)
+            .limit(3);
+
+          if (relData) {
+            setRelated(relData);
           }
+          return;
         }
+
         // Fallback
         if (fallbackMap[slug]) {
           const fb = fallbackMap[slug];

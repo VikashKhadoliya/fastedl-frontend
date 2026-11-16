@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import AdminNav from "@/components/AdminNav";
 import OxygenIcon from "@/components/OxygenIcon";
+import { useAdminAuth } from "@/lib/useAdminAuth";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminSettingsPage() {
-  const router = useRouter();
+  const { adminUser, loading: authLoading } = useAdminAuth();
   const [settings, setSettings] = useState({
     site_name: "FastEDL",
     site_tagline: "Fast Easy Download Link - Download. Create. Grow.",
@@ -19,24 +20,18 @@ export default function AdminSettingsPage() {
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("fastedl_admin_token");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
     async function loadSettings() {
       try {
-        const res = await fetch("/api/admin/settings", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.status === 401) {
-          router.push("/admin/login");
-          return;
-        }
-        const data = await res.json();
-        if (data.settings) {
-          setSettings((prev) => ({ ...prev, ...data.settings }));
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("key, value");
+
+        if (!error && data && data.length > 0) {
+          const map = {};
+          data.forEach((row) => {
+            map[row.key] = row.value;
+          });
+          setSettings((prev) => ({ ...prev, ...map }));
         }
       } catch (e) {
         console.error(e);
@@ -44,34 +39,54 @@ export default function AdminSettingsPage() {
         setLoading(false);
       }
     }
-    loadSettings();
-  }, [router]);
+
+    if (adminUser) {
+      loadSettings();
+    }
+  }, [adminUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setSavedSuccess(false);
-    const token = localStorage.getItem("fastedl_admin_token");
 
     try {
-      const res = await fetch("/api/admin/settings", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ settings })
-      });
-      if (res.ok) {
-        setSavedSuccess(true);
-        setTimeout(() => setSavedSuccess(false), 3000);
-      }
+      const now = new Date().toISOString();
+      const rows = Object.entries(settings).map(([key, value]) => ({
+        key,
+        value: String(value),
+        is_public: ["site_name", "site_tagline", "contact_email"].includes(key),
+        updated_at: now
+      }));
+
+      const { error } = await supabase
+        .from("site_settings")
+        .upsert(rows, { onConflict: "key" });
+
+      if (error) throw error;
+
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
     } catch (e) {
       console.error(e);
+      alert(e.message || "Failed to update platform settings.");
     } finally {
       setSaving(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] text-slate-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-[#635BFF] border-t-transparent animate-spin" />
+          <span className="text-xs text-slate-400 font-medium tracking-wide">
+            Verifying Admin Authorization...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col font-sans">

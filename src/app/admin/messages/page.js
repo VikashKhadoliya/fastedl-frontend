@@ -1,33 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import AdminNav from "@/components/AdminNav";
 import OxygenIcon from "@/components/OxygenIcon";
+import { useAdminAuth } from "@/lib/useAdminAuth";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminMessagesPage() {
-  const router = useRouter();
+  const { adminUser, loading: authLoading } = useAdminAuth();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const loadMessages = async () => {
-    const token = localStorage.getItem("fastedl_admin_token");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
+    setLoading(true);
     try {
-      const res = await fetch("/api/admin/messages", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.status === 401) {
-        router.push("/admin/login");
-        return;
-      }
-      const data = await res.json();
-      if (data.messages) {
-        setMessages(data.messages);
+      const { data, error } = await supabase
+        .from("contact_messages")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Failed to load contact messages:", error);
+      } else if (data) {
+        setMessages(data);
       }
     } catch (e) {
       console.error(e);
@@ -37,22 +32,22 @@ export default function AdminMessagesPage() {
   };
 
   useEffect(() => {
-    loadMessages();
-  }, []);
+    if (adminUser) {
+      loadMessages();
+    }
+  }, [adminUser]);
 
   const handleUpdateStatus = async (id, status) => {
-    const token = localStorage.getItem("fastedl_admin_token");
     try {
-      const res = await fetch(`/api/admin/messages/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ status })
-      });
-      if (res.ok) {
-        loadMessages();
+      const { error } = await supabase
+        .from("contact_messages")
+        .update({ status })
+        .eq("id", id);
+
+      if (!error) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === id ? { ...m, status } : m))
+        );
       }
     } catch (e) {
       console.error(e);
@@ -61,19 +56,32 @@ export default function AdminMessagesPage() {
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this message?")) return;
-    const token = localStorage.getItem("fastedl_admin_token");
     try {
-      const res = await fetch(`/api/admin/messages/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        loadMessages();
+      const { error } = await supabase
+        .from("contact_messages")
+        .delete()
+        .eq("id", id);
+
+      if (!error) {
+        setMessages((prev) => prev.filter((m) => m.id !== id));
       }
     } catch (e) {
       console.error(e);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] text-slate-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-[#635BFF] border-t-transparent animate-spin" />
+          <span className="text-xs text-slate-400 font-medium tracking-wide">
+            Verifying Admin Authorization...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col font-sans">
