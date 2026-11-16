@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import OxygenIcon from "./OxygenIcon";
+import AnimatedDownloadIcon from "./AnimatedDownloadIcon";
+import DownloadProgressCard from "./DownloadProgressCard";
 import { buildDownloadProxyUrl } from "@/lib/api";
+import { downloadMediaWithProgress } from "@/lib/downloadStream";
 import { useTranslation } from "../context/I18nContext";
 
 export default function MediaPreview({ data, onReset }) {
@@ -10,8 +13,38 @@ export default function MediaPreview({ data, onReset }) {
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [downloadingIndex, setDownloadingIndex] = useState(null);
   const [selectedQualityBySlide, setSelectedQualityBySlide] = useState({});
+  const [downloadState, setDownloadState] = useState("idle"); // 'idle' | 'preparing' | 'downloading' | 'completed' | 'failed'
+  const [downloadProgress, setDownloadProgress] = useState({
+    receivedBytes: 0,
+    totalBytes: 0,
+    percent: 0,
+    speed: 0,
+    remainingSeconds: null,
+    indeterminate: false,
+    qualityLabel: "",
+    filename: ""
+  });
   const [downloadError, setDownloadError] = useState(null);
+  const [currentProxyUrl, setCurrentProxyUrl] = useState("");
+  const abortControllerRef = useRef(null);
   const { t } = useTranslation();
+
+  // Cleanup active stream on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  // When changing slides, if state is completed or failed, return to idle
+  useEffect(() => {
+    if (downloadState === "completed" || downloadState === "failed") {
+      setDownloadState("idle");
+      setDownloadError(null);
+    }
+  }, [activeSlide]);
 
   if (!data || !data.items || data.items.length === 0) {
     return null;
@@ -31,9 +64,18 @@ export default function MediaPreview({ data, onReset }) {
     ? availableQualities.find((q) => q.id === selectedQualityBySlide[activeSlide]) || availableQualities[0]
     : null;
 
+  const handleCancelDownload = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setDownloadState("idle");
+    setDownloadingIndex(null);
+  };
+
   const handleDownload = async (item, idx) => {
     setDownloadingIndex(idx);
     setDownloadError(null);
+    setDownloadState("preparing");
 
     const downloadUrl = (isVideo && currentQuality && currentQuality.download_url)
       ? currentQuality.download_url
@@ -43,7 +85,7 @@ export default function MediaPreview({ data, onReset }) {
       ? currentQuality.audio_url
       : null;
 
-    const qualityLabel = isVideo && currentQuality ? currentQuality.label : null;
+    const qualityLabel = isVideo && currentQuality ? currentQuality.label : (item.dimensions_label || "Original HD");
     const formatId = isVideo && currentQuality ? (currentQuality.format_id || currentQuality.id) : null;
 
     let targetFilename = item.filename || "fastedl_download";
@@ -54,104 +96,115 @@ export default function MediaPreview({ data, onReset }) {
       } else {
         targetFilename = `${targetFilename}_${currentQuality.id}.mp4`;
       }
+    } else if (!targetFilename.includes(".")) {
+      targetFilename = `${targetFilename}.${isVideo ? "mp4" : "jpg"}`;
     }
 
     const proxyUrl = buildDownloadProxyUrl(downloadUrl, targetFilename, audioUrl, qualityLabel, formatId);
+    setCurrentProxyUrl(proxyUrl);
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
-      const res = await fetch(proxyUrl);
-      if (!res.ok) {
-        let errMessage = "Download failed. Please try again.";
-        try {
-          const errData = await res.json();
-          errMessage = errData.detail || errMessage;
-        } catch (_) {}
-        setDownloadError(errMessage);
-        setDownloadingIndex(null);
-        return;
+      await downloadMediaWithProgress({
+        url: proxyUrl,
+        filename: targetFilename,
+        qualityLabel,
+        signal: controller.signal,
+        onStateChange: (state, errMsg) => {
+          setDownloadState(state);
+          if (errMsg) setDownloadError(errMsg);
+        },
+        onProgress: (prog) => {
+          setDownloadProgress(prog);
+        }
+      });
+    } catch (err) {
+      if (controller.signal.aborted) {
+        setDownloadState("idle");
+      } else {
+        setDownloadError(err.message || "Failed to download media.");
+        setDownloadState("failed");
       }
-
-      const blob = await res.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = targetFilename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
-    } catch (e) {
-      // Fallback for memory-constrained mobile environments
-      const link = document.createElement("a");
-      link.href = proxyUrl;
-      link.download = targetFilename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     } finally {
-      setTimeout(() => {
-        setDownloadingIndex(null);
-      }, 1200);
+      setDownloadingIndex(null);
     }
   };
 
   const handleDownloadAll = async () => {
-    if (!data.items) return;
+    if (!data.items || data.items.length === 0) return;
     setDownloadingIndex("all");
     setDownloadError(null);
-    for (let i = 0; i < data.items.length; i++) {
-      const itm = data.items[i];
-      const isItmVid = itm.type === "video";
-      const itmQualities = isItmVid && itm.qualities && itm.qualities.length > 0 ? itm.qualities : null;
-      const q = itmQualities
-        ? (itmQualities.find((x) => x.id === selectedQualityBySlide[i]) || itmQualities[0])
-        : null;
+    setDownloadState("preparing");
 
-      const dlUrl = (isItmVid && q && q.download_url) ? q.download_url : itm.download_url;
-      const aUrl = (isItmVid && q && q.audio_url) ? q.audio_url : null;
-      const qLbl = isItmVid && q ? q.label : null;
-      const fId = isItmVid && q ? (q.format_id || q.id) : null;
-
-      let targetFn = itm.filename || `fastedl_slide_${i + 1}`;
-      if (isItmVid && q && q.id && targetFn) {
-        const extIdx = targetFn.lastIndexOf(".");
-        if (extIdx !== -1) {
-          targetFn = `${targetFn.slice(0, extIdx)}_${q.id}${targetFn.slice(extIdx)}`;
-        }
-      }
-
-      const proxyUrl = buildDownloadProxyUrl(dlUrl, targetFn, aUrl, qLbl, fId);
-      try {
-        const res = await fetch(proxyUrl);
-        if (!res.ok) {
-          let errMessage = "Download failed.";
-          try {
-            const errData = await res.json();
-            errMessage = errData.detail || errMessage;
-          } catch (_) {}
-          setDownloadError(errMessage);
-          continue;
-        }
-        const blob = await res.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = targetFn;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
-      } catch (e) {
-        const link = document.createElement("a");
-        link.href = proxyUrl;
-        link.download = targetFn;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-      await new Promise((r) => setTimeout(r, 600));
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
-    setDownloadingIndex(null);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      for (let i = 0; i < data.items.length; i++) {
+        if (controller.signal.aborted) break;
+
+        const itm = data.items[i];
+        const isItmVid = itm.type === "video";
+        const itmQualities = isItmVid && itm.qualities && itm.qualities.length > 0 ? itm.qualities : null;
+        const q = itmQualities
+          ? (itmQualities.find((x) => x.id === selectedQualityBySlide[i]) || itmQualities[0])
+          : null;
+
+        const dlUrl = (isItmVid && q && q.download_url) ? q.download_url : itm.download_url;
+        const aUrl = (isItmVid && q && q.audio_url) ? q.audio_url : null;
+        const qLbl = isItmVid && q ? q.label : (itm.dimensions_label || "Original HD");
+        const fId = isItmVid && q ? (q.format_id || q.id) : null;
+
+        let targetFn = itm.filename || `fastedl_slide_${i + 1}.${isItmVid ? "mp4" : "jpg"}`;
+        if (isItmVid && q && q.id && targetFn) {
+          const extIdx = targetFn.lastIndexOf(".");
+          if (extIdx !== -1) {
+            targetFn = `${targetFn.slice(0, extIdx)}_${q.id}${targetFn.slice(extIdx)}`;
+          }
+        }
+
+        const proxyUrl = buildDownloadProxyUrl(dlUrl, targetFn, aUrl, qLbl, fId);
+        setCurrentProxyUrl(proxyUrl);
+
+        await downloadMediaWithProgress({
+          url: proxyUrl,
+          filename: targetFn,
+          qualityLabel: `Slide ${i + 1} of ${data.items.length}`,
+          signal: controller.signal,
+          onStateChange: (state, errMsg) => {
+            if (state === "failed" && errMsg) {
+              setDownloadError(errMsg);
+            }
+          },
+          onProgress: (prog) => {
+            setDownloadProgress(prog);
+          }
+        });
+
+        if (i < data.items.length - 1) {
+          await new Promise((r) => setTimeout(r, 600));
+        }
+      }
+
+      setDownloadState("completed");
+    } catch (err) {
+      if (controller.signal.aborted) {
+        setDownloadState("idle");
+      } else {
+        setDownloadError(err.message || "Failed to download slides.");
+        setDownloadState("failed");
+      }
+    } finally {
+      setDownloadingIndex(null);
+    }
   };
 
   return (
@@ -462,29 +515,40 @@ export default function MediaPreview({ data, onReset }) {
 
           {/* Action Download Buttons */}
           <div className="space-y-2.5 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-[#E2E8F0] dark:border-[#334155]">
-            {/* Main Download Button */}
-            <button
-              type="button"
-              onClick={() => handleDownload(currentItem, activeSlide)}
-              disabled={downloadingIndex !== null}
-              className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-98 transition-all disabled:opacity-60 cursor-pointer shadow-md shadow-[#635BFF]/20"
-            >
-              <OxygenIcon name="download" size={16} alt="Download" />
-              <span>
-                {downloadingIndex === activeSlide
-                  ? t("preview.downloading", "Downloading...")
-                  : isVideo
-                  ? `Download Video (${currentQuality?.label || "MP4"})`
-                  : isCarousel
-                  ? `Download Photo (Slide ${activeSlide + 1} of ${data.items.length})`
-                  : currentItem.dimensions_label
-                  ? `Download Photo (${currentItem.dimensions_label})`
-                  : t("preview.downloadPhoto", "Download Photo")}
-              </span>
-            </button>
+            {/* If actively downloading, preparing, completed, or failed: Show Live Real-Time Download Progress Card */}
+            {downloadState !== "idle" ? (
+              <DownloadProgressCard
+                state={downloadState}
+                progress={downloadProgress}
+                error={downloadError}
+                isVideo={isVideo}
+                directUrl={currentProxyUrl}
+                onCancel={handleCancelDownload}
+                onRetry={() => handleDownload(currentItem, activeSlide)}
+                onReset={() => setDownloadState("idle")}
+              />
+            ) : (
+              /* Idle State: Primary Download Button */
+              <button
+                type="button"
+                onClick={() => handleDownload(currentItem, activeSlide)}
+                className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-98 transition-all cursor-pointer shadow-md shadow-[#635BFF]/20"
+              >
+                <AnimatedDownloadIcon state="idle" size={17} />
+                <span>
+                  {isVideo
+                    ? `Download Video (${currentQuality?.label || "MP4"})`
+                    : isCarousel
+                    ? `Download Photo (Slide ${activeSlide + 1} of ${data.items.length})`
+                    : currentItem.dimensions_label
+                    ? `Download Photo (${currentItem.dimensions_label})`
+                    : t("preview.downloadPhoto", "Download Photo")}
+                </span>
+              </button>
+            )}
 
-            {/* If Carousel: Download All button */}
-            {isCarousel && (
+            {/* If Carousel and Idle: Download All button */}
+            {isCarousel && downloadState === "idle" && (
               <button
                 type="button"
                 onClick={handleDownloadAll}

@@ -107,7 +107,10 @@ async function proxyRequest(request, { params }) {
       }
     });
 
-    const responseBody = await backendRes.arrayBuffer();
+    // For media download streams, forward the live ReadableStream directly without buffering in memory
+    const isStream = subPath === "download" || responseHeaders.get("content-disposition");
+    const responseBody = isStream ? backendRes.body : await backendRes.arrayBuffer();
+
     return new NextResponse(responseBody, {
       status: backendRes.status,
       statusText: backendRes.statusText,
