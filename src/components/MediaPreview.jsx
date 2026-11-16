@@ -257,33 +257,23 @@ export default function MediaPreview({ data, activeTab = "video", onReset }) {
       {/* Top Banner / Metadata */}
       <div className="px-3.5 sm:px-5 py-2.5 sm:py-3.5 bg-[#F8FAFC] dark:bg-[#0F172A] border-b border-[#E2E8F0] dark:border-[#334155] flex items-center justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          {data.owner_avatar ? (
-            <img
-              src={data.owner_avatar}
-              alt={data.owner || "Creator"}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#E2E8F0] dark:border-[#334155] object-cover shrink-0"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#635BFF]/10 text-[#635BFF] flex items-center justify-center font-bold text-xs shrink-0">
-              <OxygenIcon name="viewer" size={16} alt="User" />
-            </div>
-          )}
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#635BFF]/10 text-[#635BFF] dark:text-[#8B5CF6] flex items-center justify-center shrink-0">
+            <OxygenIcon name={isVideo ? "video" : isCarousel ? "carousel" : "photo"} size={16} alt="Media" />
+          </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-xs sm:text-sm text-[#0F172A] dark:text-[#F8FAFC] truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">
-                {data.owner ? `@${data.owner}` : "Instagram Creator"}
-              </span>
-              <OxygenIcon name="check" size={13} className="shrink-0 text-primary" alt="Verified" />
+            <div className="font-bold text-xs sm:text-sm text-[#0F172A] dark:text-[#F8FAFC] truncate">
+              {isVideo ? "Instagram Video" : isCarousel ? "Instagram Carousel" : "Instagram Photo"}
             </div>
-            <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
-              {data.timestamp && (
-                <span>{new Date(data.timestamp).toLocaleDateString()}</span>
-              )}
-              {data.likes !== null && data.likes !== undefined && (
-                <span>&bull; {data.likes.toLocaleString()} likes</span>
-              )}
-            </div>
+            {(data.timestamp || (data.likes !== null && data.likes !== undefined)) && (
+              <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
+                {data.timestamp && (
+                  <span>{new Date(data.timestamp).toLocaleDateString()}</span>
+                )}
+                {data.likes !== null && data.likes !== undefined && (
+                  <span>{data.timestamp ? "• " : ""}{data.likes.toLocaleString()} likes</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -372,11 +362,10 @@ export default function MediaPreview({ data, activeTab = "video", onReset }) {
                 <button
                   key={idx}
                   onClick={() => setActiveSlide(idx)}
-                  className={`relative flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                    activeSlide === idx
-                      ? "border-[#635BFF] ring-2 ring-[#635BFF]/30 scale-105"
-                      : "border-[#E2E8F0] dark:border-[#334155] opacity-60 hover:opacity-100"
-                  }`}
+                  className={`relative flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${activeSlide === idx
+                    ? "border-[#635BFF] ring-2 ring-[#635BFF]/30 scale-105"
+                    : "border-[#E2E8F0] dark:border-[#334155] opacity-60 hover:opacity-100"
+                    }`}
                 >
                   <img
                     src={item.thumbnail_url || item.download_url}
@@ -506,11 +495,10 @@ export default function MediaPreview({ data, activeTab = "video", onReset }) {
                             key={q.id}
                             type="button"
                             onClick={() => setSelectedQualityBySlide((prev) => ({ ...prev, [activeSlide]: q.id }))}
-                            className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                              isSelected
-                                ? "bg-[#635BFF] text-white border-[#635BFF] shadow-xs shadow-[#635BFF]/30 font-bold"
-                                : "bg-white dark:bg-[#1E293B] text-[#64748B] dark:text-[#94A3B8] border-[#E2E8F0] dark:border-[#334155] hover:border-[#635BFF]/50 hover:text-[#0F172A] dark:hover:text-[#F8FAFC]"
-                            }`}
+                            className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${isSelected
+                              ? "bg-[#635BFF] text-white border-[#635BFF] shadow-xs shadow-[#635BFF]/30 font-bold"
+                              : "bg-white dark:bg-[#1E293B] text-[#64748B] dark:text-[#94A3B8] border-[#E2E8F0] dark:border-[#334155] hover:border-[#635BFF]/50 hover:text-[#0F172A] dark:hover:text-[#F8FAFC]"
+                              }`}
                           >
                             <span className="truncate">{q.label}</span>
                             <div className="flex items-center gap-1.5 shrink-0 ml-1">

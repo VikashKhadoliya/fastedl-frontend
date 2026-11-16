@@ -362,11 +362,6 @@ export default function ReelToMp3Form() {
                   <span className="px-2 py-0.5 rounded-md bg-[#635BFF]/10 text-[#635BFF] dark:text-[#8B5CF6] text-[11px] font-bold uppercase tracking-wider">
                     Instagram Reel
                   </span>
-                  {mediaData.owner_username && (
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">
-                      @{mediaData.owner_username}
-                    </span>
-                  )}
                 </div>
 
                 <h3 className="text-base sm:text-lg font-bold text-[#0F172A] dark:text-[#F8FAFC] line-clamp-2 leading-snug">
