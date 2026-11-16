@@ -11,7 +11,7 @@ export default function sitemap() {
     { url: `${baseUrl}/instagram-photo-downloader`, lastModified: currentDate, changeFrequency: "daily", priority: 0.95 },
     { url: `${baseUrl}/instagram-carousel-downloader`, lastModified: currentDate, changeFrequency: "daily", priority: 0.95 },
     { url: `${baseUrl}/instagram-story-downloader`, lastModified: currentDate, changeFrequency: "daily", priority: 0.95 },
-    
+
     // Content Library Hubs (Manually Curated)
     { url: `${baseUrl}/instagram-captions`, lastModified: currentDate, changeFrequency: "daily", priority: 0.92 },
     { url: `${baseUrl}/instagram-hashtags`, lastModified: currentDate, changeFrequency: "daily", priority: 0.92 },
