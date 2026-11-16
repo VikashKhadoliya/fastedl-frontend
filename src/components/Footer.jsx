@@ -19,13 +19,11 @@ export default function Footer() {
 
   const libraryLinks = [
     { label: "Instagram Captions Hub", href: "/instagram-captions" },
-    { label: "Mood Captions", href: "/instagram-captions/mood-instagram-captions" },
-    { label: "Attitude Captions", href: "/instagram-captions/attitude-captions" },
-    { label: "Travel Captions", href: "/instagram-captions/travel-captions" },
+    { label: "Caption Formatter Tool", href: "/instagram-caption-formatter" },
     { label: "Instagram Hashtags Directory", href: "/instagram-hashtags" },
     { label: "Instagram Bio Ideas", href: "/instagram-bio-ideas" },
-    { label: "Boys Instagram Bios", href: "/instagram-bio-ideas/boys-instagram-bio" },
     { label: "Content & Reel Ideas", href: "/instagram-ideas" },
+    { label: "Creator Guides Hub", href: "/guides" },
   ];
 
   const platformLinks = [

@@ -18,17 +18,6 @@ export default function InstagramBiosHubPage() {
     { slug: "creator-bios", name: "Creators" },
   ];
 
-  const fallbackArticles = [
-    {
-      slug: "boys-instagram-bio",
-      title: "120+ Cool & Aesthetic Instagram Bios for Boys (VIP & Stylish)",
-      excerpt: "Upgrade your Instagram profile with 120+ unique bios for boys. From minimalist and confident to VIP attitude and classy quotes.",
-      category: "boys-instagram-bios",
-      author: "FastEDL Editorial Team",
-      read_time: "5 min read"
-    }
-  ];
-
   return (
     <ContentHub
       sectionKey="instagram-bio-ideas"
@@ -37,7 +26,6 @@ export default function InstagramBiosHubPage() {
       badgeText="Instagram Bios"
       badgeIcon="favorite"
       categories={categories}
-      fallbackArticles={fallbackArticles}
     />
   );
 }

@@ -24,33 +24,6 @@ export default function InstagramCaptionsHubPage() {
     { slug: "mirror-selfie-captions", name: "Mirror Selfie" },
   ];
 
-  const fallbackArticles = [
-    {
-      slug: "mood-instagram-captions",
-      title: "120+ Best Mood Captions for Instagram in 2026 (Copy & Paste)",
-      excerpt: "120+ hand-picked Instagram captions for every vibe—from chill and low-key to energetic, grateful, and introspective.",
-      category: "mood-captions",
-      author: "FastEDL Editorial Team",
-      read_time: "6 min read"
-    },
-    {
-      slug: "attitude-captions",
-      title: "80+ Savage Attitude Captions for Instagram (Boys & Girls)",
-      excerpt: "Explore 80+ savage, bold, and high-status attitude captions with instant copy buttons.",
-      category: "attitude-captions",
-      author: "FastEDL Editorial Team",
-      read_time: "5 min read"
-    },
-    {
-      slug: "travel-captions",
-      title: "75+ Wanderlust Travel Captions for Instagram Adventures",
-      excerpt: "Capture the thrill of the open road, mountain vistas, and coastal escapes with short, poetic captions.",
-      category: "travel-captions",
-      author: "FastEDL Editorial Team",
-      read_time: "5 min read"
-    }
-  ];
-
   return (
     <ContentHub
       sectionKey="instagram-captions"
@@ -59,7 +32,6 @@ export default function InstagramCaptionsHubPage() {
       badgeText="Instagram Captions"
       badgeIcon="text-editor"
       categories={categories}
-      fallbackArticles={fallbackArticles}
     />
   );
 }

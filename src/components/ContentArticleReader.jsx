@@ -428,32 +428,9 @@ export default function ContentArticleReader({
                   ))}
                 </div>
               ) : (
-                <div className="space-y-2 text-xs">
-                  <Link
-                    href="/instagram-captions/mood-instagram-captions"
-                    className="block p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  >
-                    ✨ 120+ Mood Captions
-                  </Link>
-                  <Link
-                    href="/instagram-captions/attitude-captions"
-                    className="block p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  >
-                    🔥 80+ Attitude Captions
-                  </Link>
-                  <Link
-                    href="/instagram-captions/travel-captions"
-                    className="block p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  >
-                    ✈️ 75+ Travel Captions
-                  </Link>
-                  <Link
-                    href="/instagram-bio-ideas/boys-instagram-bio"
-                    className="block p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  >
-                    👑 120+ Boys Bios
-                  </Link>
-                </div>
+                <p className="text-xs text-slate-500 italic">
+                  Explore more resources in the {sectionLabel} collection.
+                </p>
               )}
             </div>
 

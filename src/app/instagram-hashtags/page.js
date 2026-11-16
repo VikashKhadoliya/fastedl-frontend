@@ -19,17 +19,6 @@ export default function InstagramHashtagsHubPage() {
     { slug: "food-hashtags", name: "Food" },
   ];
 
-  const fallbackArticles = [
-    {
-      slug: "travel-hashtags",
-      title: "Best Travel Hashtags for Instagram to Boost Explore Reach",
-      excerpt: "A researched breakdown of top-tier travel hashtags categorized by destination, solo travel, luxury retreats, and photography.",
-      category: "travel-hashtags",
-      author: "FastEDL Editorial Team",
-      read_time: "5 min read"
-    }
-  ];
-
   return (
     <ContentHub
       sectionKey="instagram-hashtags"
@@ -38,7 +27,6 @@ export default function InstagramHashtagsHubPage() {
       badgeText="Instagram Hashtags"
       badgeIcon="help"
       categories={categories}
-      fallbackArticles={fallbackArticles}
     />
   );
 }

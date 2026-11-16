@@ -63,18 +63,6 @@ export default function CaptionFormatterPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleInsertSample = () => {
-    const sample = `Stop scrolling for 5 seconds. ✨
-
-Here is the truth nobody shares about building an online brand:
-
-Consistency beats talent every single day.
-When you show up daily, momentum takes over.
-
-Save this for your next reminder. 📌`;
-    setInputText(sample);
-  };
-
   const faqs = [
     {
       q: "Why do Instagram line breaks collapse without formatting?",
@@ -127,13 +115,6 @@ Save this for your next reminder. 📌`;
                 <OxygenIcon name="document-edit" className="w-4 h-4 text-primary" />
                 Raw Caption Text
               </label>
-              <button
-                type="button"
-                onClick={handleInsertSample}
-                className="text-xs text-primary hover:text-primary-hover font-semibold underline underline-offset-2"
-              >
-                Insert Sample
-              </button>
             </div>
 
             <textarea

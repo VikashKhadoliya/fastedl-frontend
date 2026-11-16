@@ -7,6 +7,7 @@ import ContentArticleReader from "@/components/ContentArticleReader";
 import OxygenIcon from "@/components/OxygenIcon";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function InstagramHashtagArticlePage() {
   const params = useParams();
@@ -22,14 +23,24 @@ export default function InstagramHashtagArticlePage() {
 
     async function loadArticle() {
       try {
-        const res = await fetch(`/api/content/articles/${slug}?section=instagram-hashtags`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.article) {
-            setArticle(data.article);
-            setRelated(data.related || []);
-            return;
-          }
+        const { data, error } = await supabase
+          .from("articles")
+          .select("*")
+          .eq("slug", slug)
+          .eq("status", "published")
+          .maybeSingle();
+
+        if (!error && data) {
+          setArticle(data);
+          const { data: relData } = await supabase
+            .from("articles")
+            .select("id, slug, title, read_time, category")
+            .eq("section", "instagram-hashtags")
+            .eq("status", "published")
+            .neq("id", data.id)
+            .limit(4);
+          setRelated(relData || []);
+          return;
         }
         setNotFound(true);
       } catch (e) {

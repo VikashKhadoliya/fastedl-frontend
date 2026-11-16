@@ -14,52 +14,9 @@ export default function GuidesHubPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Fallback seed articles in case backend is loading
-  const fallbackArticles = [
-    {
-      id: 1,
-      slug: "how-to-download-instagram-reels-in-1080p",
-      title: "How to Download Instagram Reels in Full 1080p HD with Audio",
-      excerpt: "Step-by-step masterclass on saving high-definition Instagram Reels with crystal-clear synchronized audio without watermarks.",
-      category: "reels-tips",
-      author: "FastEDL Technical Team",
-      read_time: "5 min read",
-      created_at: "2026-03-15"
-    },
-    {
-      id: 2,
-      slug: "instagram-hashtag-strategy-guide",
-      title: "The 2026 Instagram Hashtag Algorithm: Reach & Best Practices",
-      excerpt: "Why 30 random hashtags hurt your reach and how the 3x3 niche hashtag strategy accelerates discovery on Explore.",
-      category: "hashtag-guides",
-      author: "FastEDL Growth Lab",
-      read_time: "7 min read",
-      created_at: "2026-03-20"
-    },
-    {
-      id: 3,
-      slug: "how-to-fix-instagram-download-errors",
-      title: "Troubleshooting FastEDL: Why Instagram Downloads Fail & How to Fix Them",
-      excerpt: "Resolving rate limits, expired media tokens, private account restrictions, and browser cache issues effortlessly.",
-      category: "troubleshooting",
-      author: "FastEDL Support",
-      read_time: "4 min read",
-      created_at: "2026-03-25"
-    },
-    {
-      id: 4,
-      slug: "instagram-carousel-complete-guide",
-      title: "Instagram Carousel Masterclass: Highest Engaging Post Format",
-      excerpt: "How to structure multi-slide carousel albums that maximize saves, shares, and watch time in the modern algorithm.",
-      category: "creator-tutorials",
-      author: "FastEDL Content Team",
-      read_time: "6 min read",
-      created_at: "2026-04-01"
-    }
-  ];
-
   useEffect(() => {
     async function loadData() {
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from("articles")
@@ -74,11 +31,11 @@ export default function GuidesHubPage() {
             setCategories(uniqueCats.map((c) => ({ id: c, name: c.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) })));
           }
         } else {
-          setArticles(fallbackArticles);
+          setArticles([]);
         }
       } catch (e) {
-        console.warn("Using fallback articles data:", e);
-        setArticles(fallbackArticles);
+        console.error("Failed to load guides from Supabase:", e);
+        setArticles([]);
       } finally {
         setLoading(false);
       }
@@ -204,8 +161,14 @@ export default function GuidesHubPage() {
         ) : filteredArticles.length === 0 ? (
           <div className="text-center py-16 bg-white dark:bg-[#1E293B] rounded-2xl border border-slate-200 dark:border-slate-800">
             <OxygenIcon name="dialog-warning" className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-            <h3 className="font-bold text-slate-800 dark:text-slate-200">No guides match your filter</h3>
-            <p className="text-xs text-slate-500 mt-1">Try another category or search term.</p>
+            <h3 className="font-bold text-slate-800 dark:text-slate-200">
+              {articles.length === 0 ? "No published guides yet" : "No guides match your filter"}
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              {articles.length === 0
+                ? "Guides created and published in the Admin CMS will appear here."
+                : "Try another category or search term."}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">

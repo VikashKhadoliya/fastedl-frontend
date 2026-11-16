@@ -121,15 +121,13 @@ export default function AdminArticlesCMSPage() {
     setTitle("");
     setSlug("");
     setExcerpt("");
-    setContent("<p class=\"lead\">Introductory summary for this collection...</p>\n\n<h2>First Section Title</h2>\n<p>Explain the vibe or context for these captions:</p>\n\n<ul class=\"caption-group\" data-title=\"First Section Title\">\n  <li>First caption idea here. ✨</li>\n  <li>Second caption idea here. 🔥</li>\n  <li>Third caption idea here. 🚀</li>\n</ul>");
+    setContent("");
     setAuthor("FastEDL Editorial Team");
     setStatus("published");
     setReadTime("5 min read");
     setSeoTitle("");
     setSeoDescription("");
-    setFaqs([
-      { q: "How do I copy these captions?", a: "Click the Copy button beside any individual caption, or tap Copy All to copy the full list." }
-    ]);
+    setFaqs([{ q: "", a: "" }]);
     setErrorMsg("");
     setActiveTab("builder");
     setIsModalOpen(true);

@@ -16,17 +16,6 @@ export default function InstagramIdeasHubPage() {
     { slug: "instagram-story-ideas", name: "Story Ideas" },
   ];
 
-  const fallbackArticles = [
-    {
-      slug: "instagram-carousel-post-best-practices",
-      title: "Instagram Carousel Post Best Practices: Dimensions, Design & Export Tips",
-      excerpt: "A complete blueprint for designing high-engagement 10-slide carousels with optimal 4:5 aspect ratios and seamless panoramas.",
-      category: "instagram-post-ideas",
-      author: "FastEDL Editorial Team",
-      read_time: "7 min read"
-    }
-  ];
-
   return (
     <ContentHub
       sectionKey="instagram-ideas"
@@ -35,7 +24,6 @@ export default function InstagramIdeasHubPage() {
       badgeText="Content Ideas"
       badgeIcon="view-media-album-cover"
       categories={categories}
-      fallbackArticles={fallbackArticles}
     />
   );
 }

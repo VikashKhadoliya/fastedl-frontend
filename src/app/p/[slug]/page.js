@@ -4,30 +4,12 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 import OxygenIcon from "@/components/OxygenIcon";
 import FastEDLLogo from "@/components/FastEDLLogo";
-
-const DEFAULT_BACKEND = process.env.NODE_ENV === "production"
-  ? "https://fastedl-backend-production.up.railway.app"
-  : "http://127.0.0.1:8000";
-
-const BACKEND_URL = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
+import { getCmsPage } from "@/lib/cmsClient";
 
 export const dynamic = "force-dynamic";
 
 async function getPageData(slug) {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/content/pages/${slug}`, {
-      cache: "no-store"
-    });
-    if (!res.ok) return null;
-    const contentType = res.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) return null;
-    const data = await res.json();
-    if (!data.success || !data.page) return null;
-    if (data.page.status !== "published") return null;
-    return data.page;
-  } catch (e) {
-    return null;
-  }
+  return await getCmsPage(slug);
 }
 
 export async function generateMetadata({ params }) {

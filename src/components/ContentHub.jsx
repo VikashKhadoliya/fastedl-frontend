@@ -5,6 +5,7 @@ import Link from "next/link";
 import OxygenIcon from "@/components/OxygenIcon";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function ContentHub({
   sectionKey,
@@ -12,8 +13,7 @@ export default function ContentHub({
   sectionSubtitle,
   badgeText,
   badgeIcon,
-  categories = [],
-  fallbackArticles = []
+  categories = []
 }) {
   const [articles, setArticles] = useState([]);
   const [selectedCat, setSelectedCat] = useState("all");
@@ -22,21 +22,23 @@ export default function ContentHub({
 
   useEffect(() => {
     async function loadData() {
+      setLoading(true);
       try {
-        const res = await fetch(`/api/content/articles?section=${sectionKey}&limit=50`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.articles && data.articles.length > 0) {
-            setArticles(data.articles);
-          } else {
-            setArticles(fallbackArticles);
-          }
+        const { data, error } = await supabase
+          .from("articles")
+          .select("*")
+          .eq("status", "published")
+          .eq("section", sectionKey)
+          .order("created_at", { ascending: false });
+
+        if (!error && data) {
+          setArticles(data);
         } else {
-          setArticles(fallbackArticles);
+          setArticles([]);
         }
       } catch (e) {
-        console.warn("Using fallback hub data:", e);
-        setArticles(fallbackArticles);
+        console.error("Failed to load articles from Supabase:", e);
+        setArticles([]);
       } finally {
         setLoading(false);
       }
@@ -136,8 +138,14 @@ export default function ContentHub({
         ) : filteredArticles.length === 0 ? (
           <div className="text-center py-16 bg-white dark:bg-[#1E293B] rounded-2xl border border-slate-200 dark:border-slate-800">
             <OxygenIcon name="help" className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">No articles found</h3>
-            <p className="text-xs text-slate-500 mt-1">Try another category filter or search term.</p>
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+              {articles.length === 0 ? "No published articles yet" : "No matching articles found"}
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              {articles.length === 0
+                ? "Articles published from the Admin CMS will appear here."
+                : "Try another category filter or search term."}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">

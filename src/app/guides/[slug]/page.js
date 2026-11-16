@@ -19,77 +19,16 @@ export default function ArticleDetailPage() {
   const [error, setError] = useState(null);
   const [toc, setToc] = useState([]);
 
-  // Fallback article map if backend is offline
-  const fallbackMap = {
-    "how-to-download-instagram-reels-in-1080p": {
-      title: "How to Download Instagram Reels in Full 1080p HD with Audio",
-      excerpt: "Step-by-step masterclass on saving high-definition Instagram Reels with crystal-clear synchronized audio without watermarks.",
-      category: "reels-tips",
-      author: "FastEDL Technical Team",
-      read_time: "5 min read",
-      created_at: "2026-03-15",
-      updated_at: "2026-03-15",
-      content: `<h2>Understanding Instagram Reels Video Encoding</h2><p>Instagram encodes uploaded Reels using adaptive bitrate streaming (DASH). Depending on user bandwidth and connection quality, the Instagram player can deliver streams ranging from low-bandwidth 360p up to full 1080x1920 HD.</p><p>Crucially, Instagram often splits the high-definition video track from the AAC audio track. Standard browser downloaders only grab the mute video track. FastEDL automatically parses the DASH manifest and merges the pristine video stream with the synchronized stereo audio stream into a single MP4 file.</p><h2>Step-by-Step: Saving Reels on Mobile & Desktop</h2><ol><li><strong>Locate the Reel:</strong> Open Instagram and find the Reel you wish to save.</li><li><strong>Copy Share Link:</strong> Tap the paper airplane icon (Share) and select <em>Copy Link</em>.</li><li><strong>Paste into FastEDL:</strong> Open FastEDL in Safari, Chrome, or any browser, paste the URL into the input field and hit <strong>Download</strong>.</li><li><strong>Choose Quality:</strong> If multiple genuine resolutions are available, pick your desired format (e.g., 1080p Full HD) and download immediately.</li></ol><h2>Why Other Downloaders Deliver Blurry or Muted Videos</h2><p>Many online tools attempt to upscale 480p videos to 1080p falsely or fail to mux DASH audio. FastEDL adheres to strict technical transparency: we only present genuine bitstreams directly from source CDNs, ensuring pristine clarity without fake re-encoding.</p>`,
-      faqs: [
-        {
-          q: "Does FastEDL add watermarks to downloaded Reels?",
-          a: "No. FastEDL saves the original video stream without adding any logos, usernames, or watermarks."
-        },
-        {
-          q: "Can I download Reels from private Instagram accounts?",
-          a: "No. FastEDL strictly respects creator privacy and Meta access controls. Only publicly accessible media can be retrieved."
-        }
-      ]
-    },
-    "instagram-hashtag-strategy-guide": {
-      title: "The 2026 Instagram Hashtag Algorithm: Reach & Best Practices",
-      excerpt: "Why 30 random hashtags hurt your reach and how the 3x3 niche hashtag strategy accelerates discovery on Explore.",
-      category: "hashtag-guides",
-      author: "FastEDL Growth Lab",
-      read_time: "7 min read",
-      created_at: "2026-03-20",
-      updated_at: "2026-03-20",
-      content: `<h2>The Evolution of Instagram Discovery</h2><p>Instagram's search and recommendation engine has transitioned from keyword matching to contextual semantic classification. Dropping 30 generic hashtags like #love, #instagood, or #fashion now confuses the topic classifier rather than helping it.</p><h2>The 3x3 Category Strategy</h2><p>Top creators now use 5 to 9 highly targeted tags broken into three tiers:</p><ul><li><strong>Broad Category (2 tags):</strong> Defines the industry (e.g., #webdesign, #fitnessjourney).</li><li><strong>Niche Community (3 tags):</strong> Defines the sub-community with 50k–500k posts (e.g., #minimalistbranding, #calisthenicsworkout).</li><li><strong>Post Specific (2-3 tags):</strong> Explains the exact content of this post (e.g., #landingpagedesign, #handstandprogression).</li></ul><h2>Hashtag Placement: Caption vs Comments</h2><p>Internal tests and statements from Instagram leadership confirm that hashtags placed directly in the main caption provide stronger immediate indexing signals for the explore algorithm compared to delayed comment placement.</p>`,
-      faqs: [
-        {
-          q: "Should I use all 30 hashtags allowed by Instagram?",
-          a: "No. Instagram officially recommends between 3 and 8 relevant hashtags. Using all 30 can flag the post for spammy behavior."
-        }
-      ]
-    },
-    "how-to-fix-instagram-download-errors": {
-      title: "Troubleshooting FastEDL: Why Instagram Downloads Fail & How to Fix Them",
-      excerpt: "Resolving rate limits, expired media tokens, private account restrictions, and browser cache issues effortlessly.",
-      category: "troubleshooting",
-      author: "FastEDL Support",
-      read_time: "4 min read",
-      created_at: "2026-03-25",
-      updated_at: "2026-03-25",
-      content: `<h2>Common Download Failures & Solutions</h2><p>When an Instagram media extraction fails, it is usually due to one of four verifiable causes:</p><h3>1. Private or Restricted Account</h3><p>FastEDL cannot access media from private accounts or accounts gated behind age/location restrictions. Verify that the creator's profile is open to the public without requiring an Instagram login.</p><h3>2. Tracking Parameters in URL</h3><p>Sometimes copying a link from the Instagram mobile app adds long tracking parameters (e.g., <code>?igsh=...</code> or <code>?utm_source=...</code>). FastEDL automatically sanitizes these, but if an error occurs, try trimming everything after the question mark.</p><h3>3. Expired CDN Tokens</h3><p>Instagram's media URLs contain temporary time-limited security signatures. If you leave the preview open for over 30 minutes before clicking download, the token may expire. Simply click <strong>Try Another Link</strong> and re-paste.</p>`,
-      faqs: [
-        {
-          q: "Why do I see 'Unable to retrieve media' error?",
-          a: "This happens when the post is deleted, private, or Instagram's rate limit temporarily throttled extraction. Waiting a minute and trying again usually resolves it."
-        }
-      ]
-    },
-    "instagram-carousel-complete-guide": {
-      title: "Instagram Carousel Masterclass: Highest Engaging Post Format",
-      excerpt: "How to structure multi-slide carousel albums that maximize saves, shares, and watch time in the modern algorithm.",
-      category: "creator-tutorials",
-      author: "FastEDL Content Team",
-      read_time: "6 min read",
-      created_at: "2026-04-01",
-      updated_at: "2026-04-01",
-      content: `<h2>Why Carousels Beat Single Images in 2026</h2><p>Instagram carousels hold a significant algorithmic advantage: if a user scrolls past your post without engaging, Instagram will often show the post a second time on their feed featuring the <em>second slide</em> instead of the first.</p><h2>The 7-Slide High Retention Blueprint</h2><ol><li><strong>Slide 1 (The Hook):</strong> High-contrast title and bold proposition.</li><li><strong>Slide 2 (The Problem):</strong> Agitate the pain point.</li><li><strong>Slide 3-5 (The Solution Steps):</strong> Actionable, bite-sized value.</li><li><strong>Slide 6 (The Summary):</strong> One clean diagram or checklist.</li><li><strong>Slide 7 (The Call to Action):</strong> Encourage saving and sharing.</li></ol>`,
-      faqs: [
-        {
-          q: "Can I download all carousel photos at once on FastEDL?",
-          a: "Yes. FastEDL includes a 'Download All' button that retrieves every image and video slide from the carousel album."
-        }
-      ]
-    }
-  };
+  function extractToc(html) {
+    if (!html) return;
+    const matches = html.match(/<h2[^>]*>(.*?)<\/h2>/gi) || [];
+    const headings = matches.map((m, idx) => {
+      const text = m.replace(/<\/?[^>]+(>|$)/g, "");
+      const id = `heading-${idx}`;
+      return { text, id };
+    });
+    setToc(headings);
+  }
 
   useEffect(() => {
     if (!slug) return;
@@ -112,6 +51,7 @@ export default function ArticleDetailPage() {
             .from("articles")
             .select("id, slug, title, read_time")
             .eq("category", data.category)
+            .eq("status", "published")
             .neq("id", data.id)
             .limit(3);
 
@@ -121,37 +61,13 @@ export default function ArticleDetailPage() {
           return;
         }
 
-        // Fallback
-        if (fallbackMap[slug]) {
-          const fb = fallbackMap[slug];
-          setArticle(fb);
-          extractToc(fb.content);
-        } else {
-          setError("Article not found");
-        }
+        setError("Article not found");
       } catch (e) {
-        console.warn("Falling back to local article map:", e);
-        if (fallbackMap[slug]) {
-          const fb = fallbackMap[slug];
-          setArticle(fb);
-          extractToc(fb.content);
-        } else {
-          setError("Failed to load article");
-        }
+        console.error("Failed to load article:", e);
+        setError("Failed to load article");
       } finally {
         setLoading(false);
       }
-    }
-
-    function extractToc(html) {
-      if (!html) return;
-      const matches = html.match(/<h2[^>]*>(.*?)<\/h2>/gi) || [];
-      const headings = matches.map((m, idx) => {
-        const text = m.replace(/<\/?[^>]+(>|$)/g, "");
-        const id = `heading-${idx}`;
-        return { text, id };
-      });
-      setToc(headings);
     }
 
     fetchArticle();
