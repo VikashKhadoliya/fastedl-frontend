@@ -35,6 +35,8 @@ const ICON_MAP = {
   phone: "/icons/oxygen/phone.svg",
   smartphone: "/icons/oxygen/smartphone.svg",
   multimedia: "/icons/oxygen/multimedia.svg",
+  audio: "/icons/oxygen/multimedia.svg",
+  mp3: "/icons/oxygen/multimedia.svg",
 
   // Navigation & UI controls
   navigation: "/icons/oxygen/navigation.svg",

@@ -4,15 +4,16 @@ import { useState, useRef, useEffect } from "react";
 import OxygenIcon from "./OxygenIcon";
 import AnimatedDownloadIcon from "./AnimatedDownloadIcon";
 import DownloadProgressCard from "./DownloadProgressCard";
-import { buildDownloadProxyUrl } from "@/lib/api";
+import { buildDownloadProxyUrl, buildDownloadMp3ProxyUrl } from "@/lib/api";
 import { downloadMediaWithProgress } from "@/lib/downloadStream";
 import { useTranslation } from "../context/I18nContext";
 
-export default function MediaPreview({ data, onReset }) {
+export default function MediaPreview({ data, activeTab = "video", onReset }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [showFullCaption, setShowFullCaption] = useState(false);
   const [downloadingIndex, setDownloadingIndex] = useState(null);
   const [selectedQualityBySlide, setSelectedQualityBySlide] = useState({});
+  const [selectedBitrate, setSelectedBitrate] = useState(192);
   const [downloadState, setDownloadState] = useState("idle"); // 'idle' | 'preparing' | 'downloading' | 'completed' | 'failed'
   const [downloadProgress, setDownloadProgress] = useState({
     receivedBytes: 0,
@@ -128,6 +129,50 @@ export default function MediaPreview({ data, onReset }) {
         setDownloadState("idle");
       } else {
         setDownloadError(err.message || "Failed to download media.");
+        setDownloadState("failed");
+      }
+    } finally {
+      setDownloadingIndex(null);
+    }
+  };
+
+  const handleDownloadMp3 = async (item, bitrate = 192) => {
+    if (!item) return;
+    setDownloadingIndex("mp3");
+    setDownloadError(null);
+    setDownloadState("preparing");
+
+    const sourceAudio = item.audio_url || item.download_url;
+    const shortcode = data.shortcode || "audio";
+    const targetFilename = `fastedl_${shortcode}_${bitrate}k.mp3`;
+    const proxyUrl = buildDownloadMp3ProxyUrl(sourceAudio, targetFilename, bitrate, false);
+    setCurrentProxyUrl(proxyUrl);
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      await downloadMediaWithProgress({
+        url: proxyUrl,
+        filename: targetFilename,
+        qualityLabel: `${bitrate} kbps MP3 Audio`,
+        signal: controller.signal,
+        onStateChange: (state, errMsg) => {
+          setDownloadState(state);
+          if (errMsg) setDownloadError(errMsg);
+        },
+        onProgress: (prog) => {
+          setDownloadProgress(prog);
+        }
+      });
+    } catch (err) {
+      if (controller.signal.aborted) {
+        setDownloadState("idle");
+      } else {
+        setDownloadError(err.message || "Failed to convert and download MP3.");
         setDownloadState("failed");
       }
     } finally {
@@ -510,6 +555,42 @@ export default function MediaPreview({ data, onReset }) {
                   </span>
                 </div>
               )}
+
+              {/* MP3 Audio Track Options & In-Browser Audio Player */}
+              {(isVideo || currentItem.audio_url) && (
+                <div className="pt-3 border-t border-[#E2E8F0] dark:border-[#334155] space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-[#0F172A] dark:text-[#F8FAFC] flex items-center gap-1.5">
+                      <OxygenIcon name="multimedia" size={14} alt="Audio" />
+                      <span>Audio Track (MP3)</span>
+                    </span>
+                    <div className="flex items-center gap-1 bg-white dark:bg-[#0F172A] p-0.5 rounded-lg border border-[#E2E8F0] dark:border-[#334155]">
+                      {[128, 192, 320].map((b) => (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setSelectedBitrate(b)}
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold cursor-pointer transition-colors ${
+                            selectedBitrate === b
+                              ? "bg-[#635BFF] text-white"
+                              : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                          }`}
+                        >
+                          {b}k
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Audio Preview Stream Player */}
+                  <audio
+                    controls
+                    preload="none"
+                    src={buildDownloadMp3ProxyUrl(currentItem.audio_url || currentItem.download_url, "preview", 128, true)}
+                    className="w-full h-8 accent-[#635BFF]"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -521,30 +602,70 @@ export default function MediaPreview({ data, onReset }) {
                 state={downloadState}
                 progress={downloadProgress}
                 error={downloadError}
-                isVideo={isVideo}
+                isVideo={downloadingIndex !== "mp3" && isVideo}
                 directUrl={currentProxyUrl}
                 onCancel={handleCancelDownload}
-                onRetry={() => handleDownload(currentItem, activeSlide)}
+                onRetry={() => (downloadingIndex === "mp3" ? handleDownloadMp3(currentItem, selectedBitrate) : handleDownload(currentItem, activeSlide))}
                 onReset={() => setDownloadState("idle")}
               />
             ) : (
-              /* Idle State: Primary Download Button */
-              <button
-                type="button"
-                onClick={() => handleDownload(currentItem, activeSlide)}
-                className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-98 transition-all cursor-pointer shadow-md shadow-[#635BFF]/20"
-              >
-                <AnimatedDownloadIcon state="idle" size={17} />
-                <span>
-                  {isVideo
-                    ? `Download Video (${currentQuality?.label || "MP4"})`
-                    : isCarousel
-                    ? `Download Photo (Slide ${activeSlide + 1} of ${data.items.length})`
-                    : currentItem.dimensions_label
-                    ? `Download Photo (${currentItem.dimensions_label})`
-                    : t("preview.downloadPhoto", "Download Photo")}
-                </span>
-              </button>
+              <>
+                {/* When activeTab is MP3: Primary button is Download MP3 */}
+                {activeTab === "mp3" ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadMp3(currentItem, selectedBitrate)}
+                      className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-98 transition-all cursor-pointer shadow-md shadow-[#635BFF]/20"
+                    >
+                      <AnimatedDownloadIcon state="idle" size={17} />
+                      <span>Download MP3 Audio ({selectedBitrate} kbps)</span>
+                    </button>
+                    {isVideo && (
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(currentItem, activeSlide)}
+                        className="w-full min-h-[42px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold text-[#635BFF] dark:text-[#8B5CF6] bg-[#635BFF]/10 dark:bg-[#635BFF]/20 hover:bg-[#635BFF]/20 border border-[#635BFF]/25 transition-colors cursor-pointer"
+                      >
+                        <OxygenIcon name="video" size={15} alt="Video" />
+                        <span>Download Full Video ({currentQuality?.label || "MP4"})</span>
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Standard Mode: Primary Video / Photo download button */}
+                    <button
+                      type="button"
+                      onClick={() => handleDownload(currentItem, activeSlide)}
+                      className="w-full min-h-[48px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#635BFF] hover:bg-[#5247E6] active:scale-98 transition-all cursor-pointer shadow-md shadow-[#635BFF]/20"
+                    >
+                      <AnimatedDownloadIcon state="idle" size={17} />
+                      <span>
+                        {isVideo
+                          ? `Download Video (${currentQuality?.label || "MP4"})`
+                          : isCarousel
+                          ? `Download Photo (Slide ${activeSlide + 1} of ${data.items.length})`
+                          : currentItem.dimensions_label
+                          ? `Download Photo (${currentItem.dimensions_label})`
+                          : t("preview.downloadPhoto", "Download Photo")}
+                      </span>
+                    </button>
+
+                    {/* Prominent MP3 Audio Download Button for any Video/Reel */}
+                    {(isVideo || currentItem.audio_url) && (
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadMp3(currentItem, selectedBitrate)}
+                        className="w-full min-h-[42px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-[#635BFF] dark:text-[#8B5CF6] bg-[#635BFF]/10 dark:bg-[#635BFF]/20 hover:bg-[#635BFF]/25 border border-[#635BFF]/30 active:scale-98 transition-colors cursor-pointer shadow-xs"
+                      >
+                        <OxygenIcon name="multimedia" size={15} alt="MP3" />
+                        <span>Download MP3 Audio ({selectedBitrate} kbps)</span>
+                      </button>
+                    )}
+                  </>
+                )}
+              </>
             )}
 
             {/* If Carousel and Idle: Download All button */}

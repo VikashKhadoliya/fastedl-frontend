@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import OxygenIcon from "./OxygenIcon";
 import { fetchInstagramMedia } from "@/lib/api";
 import { useTranslation } from "../context/I18nContext";
@@ -42,8 +43,9 @@ export default function DownloaderForm({ initialTab = "video" }) {
 
   const tabs = [
     { id: "video", label: t("tabs.video", "Video"), icon: "video" },
-    { id: "photo", label: t("tabs.photo", "Photo"), icon: "photo" },
     { id: "reels", label: t("tabs.reels", "Reels"), icon: "reels" },
+    { id: "mp3", label: "Reel to MP3", icon: "multimedia" },
+    { id: "photo", label: t("tabs.photo", "Photo"), icon: "photo" },
     { id: "story", label: t("tabs.story", "Story"), icon: "story" },
     { id: "igtv", label: t("tabs.igtv", "IGTV"), icon: "igtv" },
     { id: "carousel", label: t("tabs.carousel", "Carousel"), icon: "carousel" },
@@ -168,6 +170,19 @@ export default function DownloaderForm({ initialTab = "video" }) {
         </div>
       </div>
 
+      {/* Reel to MP3 Active Mode Banner */}
+      {activeTab === "mp3" && (
+        <div className="mb-2.5 px-3 sm:px-4 py-2 rounded-xl bg-[#635BFF]/10 dark:bg-[#635BFF]/20 border border-[#635BFF]/30 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1.5 text-xs text-[#635BFF] dark:text-[#8B5CF6] animate-in fade-in">
+          <span className="font-semibold flex items-center gap-1.5">
+            <OxygenIcon name="multimedia" size={15} alt="MP3" />
+            <span>Reel to MP3 Mode: Extract and save audio tracks in 192k/320k MP3</span>
+          </span>
+          <Link href="/instagram-reel-to-mp3" className="font-bold underline hover:opacity-80 shrink-0">
+            Dedicated Player Page →
+          </Link>
+        </div>
+      )}
+
       {/* Main Input Form Container - Compact, clean, and mobile-first */}
       <div className="w-full bg-white dark:bg-[#1E293B] rounded-2xl sm:rounded-3xl border border-[#E2E8F0] dark:border-[#334155] shadow-lg sm:shadow-xl p-2.5 sm:p-3.5 transition-all">
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5">
@@ -175,7 +190,7 @@ export default function DownloaderForm({ initialTab = "video" }) {
           <div className="relative flex-1 w-full min-w-0">
             {/* Search/Link Icon */}
             <div className="absolute inset-y-0 left-0 pl-3.5 sm:pl-4 flex items-center pointer-events-none text-[#94A3B8]">
-              <OxygenIcon name="search" size={17} alt="Search" />
+              <OxygenIcon name={activeTab === "mp3" ? "multimedia" : "search"} size={17} alt="Search" />
             </div>
 
             <input
@@ -185,7 +200,11 @@ export default function DownloaderForm({ initialTab = "video" }) {
                 setUrl(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder={t("form.placeholder", "Paste your Instagram link here")}
+              placeholder={
+                activeTab === "mp3"
+                  ? "Paste Instagram Reel link to download MP3 audio"
+                  : t("form.placeholder", "Paste your Instagram link here")
+              }
               disabled={loading}
               className="w-full pl-10 pr-10 sm:pr-36 py-3 sm:py-3.5 text-base sm:text-sm md:text-base text-[#0F172A] dark:text-[#F8FAFC] bg-[#F8FAFC] dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#334155] rounded-xl sm:rounded-2xl placeholder:text-[#94A3B8] focus:outline-none focus:bg-white dark:focus:bg-[#0F172A] focus:border-[#635BFF] focus:ring-3 focus:ring-[#635BFF]/15 transition-all truncate"
             />
@@ -218,7 +237,7 @@ export default function DownloaderForm({ initialTab = "video" }) {
           {/* Mobile Action Sub-bar: Dedicated Paste Link + Format Indicator (Visible < sm) */}
           <div className="flex sm:hidden items-center justify-between px-1 pt-0.5 pb-0.5">
             <span className="text-[11px] text-[#94A3B8] dark:text-[#64748B] font-medium">
-              Reels &bull; Posts &bull; Stories &bull; Slides
+              {activeTab === "mp3" ? "128k • 192k • 320k MP3" : "Reels • Posts • Stories • Slides"}
             </span>
             <button
               type="button"
@@ -244,8 +263,8 @@ export default function DownloaderForm({ initialTab = "video" }) {
               </>
             ) : (
               <>
-                <OxygenIcon name="download" size={18} alt="Download" />
-                <span>{t("form.download", "Download")}</span>
+                <OxygenIcon name={activeTab === "mp3" ? "multimedia" : "download"} size={18} alt="Download" />
+                <span>{activeTab === "mp3" ? "Download MP3" : t("form.download", "Download")}</span>
               </>
             )}
           </button>
@@ -280,7 +299,7 @@ export default function DownloaderForm({ initialTab = "video" }) {
 
       {/* Media Preview Result */}
       {result && (
-        <MediaPreview data={result} onReset={handleClear} />
+        <MediaPreview data={result} activeTab={activeTab} onReset={handleClear} />
       )}
     </div>
   );
